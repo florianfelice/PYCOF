@@ -48,7 +48,6 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 
 ## Publish or read from DB
-
 def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
@@ -61,65 +60,87 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         query_type (str): Type of SQL query to execute. Can either be SELECT, INSERT or DELETE (defaults "SELECT").
         table (str): Table in which we want to operate, only used for INSERT and DELETE (defaults "").
         data (pandas.DataFrame): Data to load on the database (defaults {}).
-        credentials (dict): Credentials to use to connect to the database (detaults {}).
+        credentials (dict): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         verbose (bool): Display progression bar (defaults True).
 
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
     """
-    
-    if credentials == {}:
-	    with open('/etc/config.json') as config_file:
-	    	config = json.load(config_file)
+    # Check if credentials of credentials path is provided
+    if type(credentials) == str:
+        if '/' in credentials:
+            path = credentials
+        elif sys.platform == 'win32'
+            path = 'C:/Windows/' + credentials
+        else:
+            path = '/etc/' + credentials
+    elif (type(credentials) == dict) & (credentials == {}):
+        if sys.platform == 'win32':
+            path = 'C:/Windows/config.json'
+        else:
+            path = '/etc/config.json'
     else:
-    	config = credentials
-    #
+        path = ''
+    
+    # Load credentials
+    if path == '':
+        config = credentials
+    else:
+        with open(path) as config_file:
+            config = json.load(config_file)
+    
+    # Check if the query_type value is correct
     all_query_types = ['SELECT', 'INSERT', 'DELETE']
+    assert query_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
     
     ## Access DB credentials
     hostname = config.get('DB_HOST') # Read the host name value from the config dictionnary
-    port = int(config.get('DB_PORT'))
-    user = config.get('DB_USER')
-    password = config.get('DB_PASSWORD')
-    database = config.get('DB_DATABASE')
-    #
+    port = int(config.get('DB_PORT')) # Get the port from the config file and convert it to int
+    user = config.get('DB_USER')    # Get the user name for connecting to the DB
+    password = config.get('DB_PASSWORD') # Get the DB
+    database = config.get('DB_DATABASE') # For Redshift, use the database, for MySQL set it by default to ""
+    
     # Set default value for table
-    if (query_type == all_query_types[0]): # SELECT
-        if (table == ""):
-        	## If the table is not specified, we get it from the SQL query
+    if (query_type == 'SELECT'): # SELECT
+        if (table == ""): # If the table is not specified, we get it from the SQL query
             table = sql_query.replace('\n', ' ').split('FROM ')[1].split(' ')[0]
-        elif (query_type == all_query_types[0]) & (table.upper() in sql_query.upper()):
+        elif (query_type == 'SELECT') & (table.upper() in sql_query.upper()):
             table = table
         else:
             raise SyntaxError('Argument table does not match with SQL statement')
-    #
-    # Initiate sql connection to the 
+    
+    # Initiate sql connection to the Database
     if 'redshift' in hostname.split('.'):
-        conn = psycopg2.connect(host=hostname, port=port, user=user, password=password, database=database)
-        cur = conn.cursor()
+        try:
+            conn = psycopg2.connect(host=hostname, port=port, user=user, password=password, database=database)
+            cur = conn.cursor()
+        except:
+            raise ValueError('Failed to connect to the Redshfit cluster')
     else:
-        conn = pymysql.connect(host=hostname, port=port, user=user, password=password)
-        cur = conn.cursor()
-    #
+        try:
+            conn = pymysql.connect(host=hostname, port=port, user=user, password=password)
+            cur = conn.cursor()
+        except:
+            raise ValueError('Failed to connect to the MySQL database')
+    
     # Read query
-    if query_type.upper() == all_query_types[0]: # SELECT
+    if query_type.upper() == "SELECT": # SELECT
         read = pd.read_sql(sql_query, conn)
         return(read)
-    	
+    
     # Insert query
-    elif query_type.upper() == all_query_types[1]: # INSERT
-        #
+    elif query_type.upper() == "INSERT": # INSERT
         # Check if user defined the table to publish
         if table == "":
             raise SyntaxError('Destination table not defined by user')
         # Create the column string and the number of columns used for push query 
         columns_string = (', ').join(list(data.columns))
         col_num = len(list(data.columns))-1
-        #
+        
         #calculate the size of the dataframe to be pushed
         num = len(data)
         batches = int(num/10000)+1
-        #
+        
         # Push 10k batches iterativeley and then push the remainder
         if num == 0:
             raise ValueError('len(data) == 0 -> No data to insert')
@@ -130,16 +151,12 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
             # push the remainder
             cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data[(batches-1)*10000 :].values.tolist())
             conn.commit()
-        #elif num == 1:
-        #    str_values = ('", "').join(str(x) for x in list(data.values[0])).replace('nan', '')
-        #    cur.execute(f'INSERT INTO {table} ({columns_string}) VALUES ("{str_values}")')
-        #    conn.commit()
         else:
             # Push everything if less then 10k (SQL Server limit)
             cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data.values.tolist())
             conn.commit()
-    #
-    elif query_type.upper() == all_query_types[2]: # DELETE
+    
+    elif query_type.upper() == "DELETE": # DELETE
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
             conn.commit()
@@ -147,7 +164,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
             raise ValueError('Table does not match with SQL query')
     else:
         raise SyntaxError('Unknown query_type, should be as: {all_query_types}')
-    #
+    
     #close sql connection
     conn.close()
 

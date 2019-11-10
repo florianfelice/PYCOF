@@ -17,6 +17,7 @@ The library is supported on Windows, Linux and MacOs.
 #### 2.1.1 Save your credentials locally
 
 The function `remote_execute_sql` will by default look for the credentials located in `/etc/config.json`.
+On Windows, save the config file as `C:/Windows/config.json`.
 
 The file follows the below structure:
 
@@ -39,6 +40,8 @@ sudo nano /etc/config.json
 and paste the above json after filling the empty strings.
 
 *__Reminder:__* To save the file, with nano press `CTRL + O` and `y` then `CTRL + X` to exit.
+
+On Windows, use the path `C:/Windows/config.json`.
 
 
 #### Pass your credentials in you code
@@ -79,7 +82,7 @@ The current version of the library provides:
 * `remote_execute_sql`: aggragated function for SQL queries to `SELECT`, `INSERT` or `DELETE`.
 * `add_zero`: simple function to convert int to str by adding a 0 is less than 10.
 * `OneHotEncoding`: perform [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
-* `create_dataset`: function to format a [PanDas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
+* `create_dataset`: function to format a [Pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
 * `group`: will convert an `int` to a `str` with thousand seperator.
 * `replace_zero`: will transform 0 values to `-` for display purposes.
 * `display_name`: displays the current user name. Will display either `first`, `last` or `full` name.
@@ -93,5 +96,11 @@ The current version of the library provides:
 
 ### 3.1. How to use multiple credentials for `remote_execute_sql`?
 
-In the next release, the `credentials` argument will be able to take credentials path into account to load them.
-Then, you will be able to save multiple credential files (e.g. `/etc/config.json` and `/etc/MyNewHost.json`) and pass the path of your choice as a value for `credentials` in `remote_execute_sql` to use them.
+The `credentials` argument can take the path or json file name into account to load them.
+You can have multiple credential files such as `/etc/config.json`, `/etc/MyNewHost.json` and `/home/OtherHost.json`.
+In `remote_execute_sql` you can play with the arguments.
+
+* To use the `/etc/config.json` credentials you can use the default arguments by not providing anything.
+* To use `/etc/MyNewHost.json` you can either pass `MyNewHost.json` or the whole path to use them.
+* To use `/home/OtherHost.json` you need to pass the whole path.
+
