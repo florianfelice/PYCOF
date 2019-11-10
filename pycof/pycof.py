@@ -15,6 +15,23 @@ from tqdm import tqdm
 ## Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
 
 def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list = False):
+    """Extended print function with tqdm display for loops.
+    Also has argument verbose for automated scripts with overall verbisity argument
+
+    Example:
+        > for i in pycof.verbose_display(range(15)):
+        ...     i += 1
+    
+    Args:
+        element (str): The element to be displayed. Can either be str, range, list.
+        verbose (bool): Display the element or not (defaults True).
+        sep (str): The deperator to use of displaying different lists/strings (defaults ' ').
+        end (str): How to end the display (defaults '\n').
+        return_list (bool): If it is a list, can return in for paragraph format (defaults False).
+
+    Returns:
+        str: The element to be displayed.
+    """
     if (verbose in [1, True]) & (type(element) in [list, range]) & (return_list == False):
         return(tqdm(element))
     elif (verbose in [1, True]) & (type(element) in [list]) & (return_list == True):
@@ -33,7 +50,24 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 ## Publish or read from DB
 
 def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True):
-    #
+    """Simplified function for executing SQL queries.
+    Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
+
+    Example:
+        > remote_execute_sql("SELECT * FROM SCHEMA.TABLE LIMIT 10")
+
+    Args:
+        sql_query (str): SQL query to be executed (defaults "").
+        query_type (str): Type of SQL query to execute. Can either be SELECT, INSERT or DELETE (defaults "SELECT").
+        table (str): Table in which we want to operate, only used for INSERT and DELETE (defaults "").
+        data (pandas.DataFrame): Data to load on the database (defaults {}).
+        credentials (dict): Credentials to use to connect to the database (detaults {}).
+        verbose (bool): Display progression bar (defaults True).
+
+    Returns:
+        pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
+    """
+    
     if credentials == {}:
 	    with open('/etc/config.json') as config_file:
 	    	config = json.load(config_file)
@@ -123,6 +157,14 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
 
 ## Add zero to int less than 10 and return a string
 def add_zero(nb):
+    """Converts a number to a string and adds a '0' if less than 10.
+
+    Args:
+        nb (float): Number to be converted to a str.
+
+    Returns:
+        str: Converted number qs a string.
+    """
     if nb < 10:
         return('0' + str(nb))
     else:
@@ -133,14 +175,25 @@ def add_zero(nb):
 
 ## Adding One Hot Encoding
 def OneHotEncoding(df, colName, drop = True, verbose = False):
+    """Performs One Hot Encoding (OHE) usally used in Machine Learning.
+
+    Args:
+        df (pandas.DataFrame): Data Frame on whioch we apply One Hot Encoding.
+        colName (list): Columns to be converted to dummy variables.
+        drop (bool): Keep the columns that need to be converted to dummies (defaults True).
+        verbose (bool): Display progression (defaults False).
+
+    Returns:
+        pandas.DataFrame: Transformed dataset with One Hot Encoding.
+    """
     all_values = df[colName].unique()
-    #
+    
     for val in all_values:
         if verbose:
             print('Encoding for value: ' + str(val))
         df[colName + '_' + str(val)] = 0
         df[colName + '_' + str(val)][df[colName] == val] = 1
-    #
+    
     if drop:
         df = df.drop(columns = [colName])
     return(df)
@@ -151,6 +204,16 @@ def OneHotEncoding(df, colName, drop = True, verbose = False):
 
 ## convert an array of values into a dataset matrix: used for LSTM data pre-processing
 def create_dataset(dataset, look_back=1):
+    """Function to convert a DataFrame to array format readable for keras LSTM.
+
+    Args:
+        dataset (pandas.DataFrame): DataFrame on which to aply the transformation.
+        look_back (int): Number of periods in the past to consider (defaults 1).
+
+    Returns:
+        np.array: Features X converted for keras LSTM.
+        np.array: Dependent variable Y converted for keras LSTM.
+    """
     dataX, dataY = [], []
     for i in range(len(dataset)-look_back-1):
         a = dataset[i:(i+look_back), 0]
@@ -164,6 +227,14 @@ def create_dataset(dataset, look_back=1):
 
 ### Put thousand separator
 def group(number):
+    """Transforms a number into a string with a thousand separator.
+
+    Args:
+        number (float): Number to be transformed.
+
+    Returns:
+        str: Transformed number.
+    """
     s = '%d' % number
     groups = []
     while s and s[-1].isdigit():
@@ -176,11 +247,19 @@ def group(number):
 
 
 ### Transform 0 to '-'
-def replace_zero(x):
-    if (str(x) == '0'):
+def replace_zero(bn):
+    """For a given number, will transform 0 by '-' for display puspose.
+
+    Args:
+        nb (float): Number to be transformed.
+
+    Returns:
+        str: Transformed number as a string.
+    """
+    if (str(nb) == '0'):
         return '-'
     else:
-        return(group(x/1000))
+        return(group(nb/1000))
 
 
 ##############################################################################################################################
@@ -188,8 +267,13 @@ def replace_zero(x):
 
 ### Get use name (not only login)
 def display_name(display='first'):
-    """
-        display = first / last / all
+    """Displays current user name (either first/last or full name)
+    
+    Args:
+        display (str): What name to display 'first', 'last' or 'full' (defaults 'first').
+
+    Returns:
+        str: Name to be displayed.
     """
     try:
         if sys.platform in ['win32']:
@@ -225,6 +309,18 @@ def display_name(display='first'):
 
 # Write to a txt file
 def write(text, file, perm = 'a', verbose = False, end_row = '\n'):
+    """Write a line of text into a file (usually .txt).
+
+    Args:
+        text (str): Line of text to be inserted in the file.
+        file (str): File on which to write (/path/to/file.txt). Can be any format, not necessarily txt.
+        perm (str): Permission to use when opening file (usually 'a' for appending text, or 'w' to (re)write file).
+        verbose (bool): Return the length of the inserted text if set to True (defaults False).
+        end_row (str): Character to end the row (defaults '\n').
+
+    Returns:
+        int: Number of characters inserted if verbose is True.
+    """
     with open(file, perm) as f:
         f.write(text + end_row)
     if verbose:
@@ -235,13 +331,30 @@ def write(text, file, perm = 'a', verbose = False, end_row = '\n'):
 
 # Convert a string to boolean
 def str2bool(v):
-  return v.lower() in ("yes", "true", "t", "1")
+    """Convert a string into boolean.
+
+    Args:
+        v (str): Value to be converted to boolean.
+
+    Returns:
+        bool: Returns either True or False.
+    """
+    return v.lower() in ("yes", "true", "t", "1")
 
 
 ##############################################################################################################################
 
 # WMAPE formula
 def wmape(y, yhat):
+    """Computes the Weighted Mean Absolute Percentage Error.
+
+    Args:
+        y (list): Real values on which to compare.
+        yhat (list): Predicted values.
+
+    Returns:
+        float: Weighted MAPE.
+    """
     y = np.array(y)
     yhat = np.array(yhat)
     mape = sum(np.abs(y-yhat))/sum(y)*100
@@ -253,6 +366,16 @@ def wmape(y, yhat):
 
 # MSE formula
 def mse(y_estimated, y_actual, root=False):
+    """Computes the Mean Squared Error
+
+    Args:
+        y_estimated (list): Real values on which to compare.
+        y_actuams (list): Predicted values.
+        root (bool): Return Root Mean Squared Error (RMSE) or simple MSE.
+
+    Returns:
+        float: MSE or RMSE.
+    """
     y_estimates = np.array(y_estimates)
     y_actuals = np.array(y_actuals)
     if root:
