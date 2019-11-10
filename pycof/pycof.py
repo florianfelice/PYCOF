@@ -1,12 +1,12 @@
 import os
 import sys
 import getpass
+import json
 
 import pymysql
 import psycopg2
-
-import json
 import pandas as pd
+from tqdm import tqdm
 
 
 ##############################################################################################################################
