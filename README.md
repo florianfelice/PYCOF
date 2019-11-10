@@ -1,1 +1,1 @@
-# PYGEF (PYthon GEneral Functions)
+# PYCOF (PYthon COmmon Functions)
