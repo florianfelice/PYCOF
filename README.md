@@ -1,10 +1,20 @@
 # PYCOF (PYthon COmmon Functions)
 
-## 1. Usage
+## 1. Installation
 
-### 1.1 Config file for credentials
+You can get pycof from [PyPI](https://pypi.org/project/pycof/) with:
 
-#### 1.1.1 Save your credentials locally
+```bash
+pip install pycof
+```
+
+The library is supported on Windows, Linux and MacOs.
+
+## 2. Usage
+
+### 2.1 Config file for credentials
+
+#### 2.1.1 Save your credentials locally
 
 The function `remote_execute_sql` will by default look for the credentials located in `/etc/config.json`.
 
@@ -37,7 +47,7 @@ Though it is highly not recommended, you can pass your credentials locally to th
 You can then create a dictionnary using the same keys as described in [previous section](#111-save-your-credentials-locally).
 
 
-### 1.2 Load pycof
+### 2.2 Load pycof
 
 To load `pycof` in your script, you can use:
 
@@ -61,15 +71,15 @@ remote_execute_sql(sql)
 ```
 
 
-### 1.3 Available functions
+### 2.3 Available functions
 
 The current version of the library provides:
 
-* `verbose_display`: extended function for `print` that can print strings, lists, data frames and uses tqdm is used in `for` loops.
+* `verbose_display`: extended function for [print](https://docs.python.org/3/library/functions.html#print) that can print strings, lists, data frames and uses tqdm is used in `for` loops.
 * `remote_execute_sql`: aggragated function for SQL queries to `SELECT`, `INSERT` or `DELETE`.
 * `add_zero`: simple function to convert int to str by adding a 0 is less than 10.
-* `OneHotEncoding`: perform One Hot Encoding on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
-* `create_dataset`: function to format a `pandas` dataframe for `keras` format for LSTM.
+* `OneHotEncoding`: perform [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
+* `create_dataset`: function to format a [PanDas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
 * `group`: will convert an `int` to a `str` with thousand seperator.
 * `replace_zero`: will transform 0 values to `-` for display purposes.
 * `display_name`: displays the current user name. Will display either `first`, `last` or `full` name.
@@ -77,3 +87,11 @@ The current version of the library provides:
 * `str2bool`: converts string to boolean.
 * `wmape`: computes the [Weighted Mean Absolute Percentage Error](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) between two columns.
 * `mse`: computes the [Mean Squared Error](https://en.wikipedia.org/wiki/Mean_squared_error) between two columns. Returns the RMSE (Root MSE) if `root` is set to `True`.
+
+
+## 3. FAQ
+
+### 3.1. How to use multiple credentials for `remote_execute_sql`?
+
+In the next release, the `credentials` argument will be able to take credentials path into account to load them.
+Then, you will be able to save multiple credential files (e.g. `/etc/config.json` and `/etc/MyNewHost.json`) and pass the path of your choice as a value for `credentials` in `remote_execute_sql` to use them.
