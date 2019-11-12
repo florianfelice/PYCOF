@@ -70,7 +70,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     if type(credentials) == str:
         if '/' in credentials:
             path = credentials
-        elif sys.platform == 'win32'
+        elif sys.platform == 'win32':
             path = 'C:/Windows/' + credentials
         else:
             path = '/etc/' + credentials
