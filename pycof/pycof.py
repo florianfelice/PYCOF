@@ -118,6 +118,11 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
             raise ValueError('Failed to connect to the Redshfit cluster')
     else:
         try:
+            # Add new encoder of numpy.float64
+            pymysql.converters.encoders[np.float64] = pymysql.converters.escape_float
+            pymysql.converters.conversions = pymysql.converters.encoders.copy()
+            pymysql.converters.conversions.update(pymysql.converters.decoders)
+            # Create connection
             conn = pymysql.connect(host=hostname, port=port, user=user, password=password)
             cur = conn.cursor()
         except:
@@ -195,7 +200,7 @@ def OneHotEncoding(df, colName, drop = True, verbose = False):
     """Performs One Hot Encoding (OHE) usally used in Machine Learning.
 
     Args:
-        df (pandas.DataFrame): Data Frame on whioch we apply One Hot Encoding.
+        df (pandas.DataFrame): Data Frame on which we apply One Hot Encoding.
         colName (list): Columns to be converted to dummy variables.
         drop (bool): Keep the columns that need to be converted to dummies (defaults True).
         verbose (bool): Display progression (defaults False).
@@ -356,7 +361,7 @@ def str2bool(v):
     Returns:
         bool: Returns either True or False.
     """
-    return v.lower() in ("yes", "true", "t", "1")
+    return v.lower() in ("yes", "y", "true", "t", "1")
 
 
 ##############################################################################################################################
