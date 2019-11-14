@@ -269,7 +269,7 @@ def group(number):
 
 
 ### Transform 0 to '-'
-def replace_zero(bn):
+def replace_zero(nb):
     """For a given number, will transform 0 by '-' for display puspose.
 
     Args:
@@ -282,6 +282,34 @@ def replace_zero(bn):
         return '-'
     else:
         return(group(nb/1000))
+
+
+
+##############################################################################################################################
+
+
+### Get the week (sunday) date
+def week_sunday(date, return_week_nb = False):
+    """For a given date, will return the date from previous sunday or week number.
+
+    Args:
+        date (datetime.date): Date tfrom which we extract the week number/sunday date.
+        return_week_nb (bool): If True will return week number with sunday basis (defaults False).
+
+    Returns:
+        int: Week number (from 1 to 52) if return_week_nb else date format.
+    """
+    # Get when was the last sunday
+    idx = (date.weekday() + 1) % 7 # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
+    # Get the date
+    last_sunday = date - datetime.timedelta(idx)
+    if return_week_nb:
+        # Return iso week number
+        return(last_sunday.isocalendar()[1] + 1)
+    else:
+        # Return date
+        return(last_sunday)
+
 
 
 ##############################################################################################################################
