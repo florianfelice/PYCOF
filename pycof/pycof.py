@@ -48,7 +48,7 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 
 ## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True):
+def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
 
@@ -62,11 +62,15 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         data (pandas.DataFrame): Data to load on the database (defaults {}).
         credentials (dict): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         verbose (bool): Display progression bar (defaults True).
+        autofill_nan (bool): Replace NaN values by 'NULL' (defaults True).
 
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
     """
-    # Check if credentials of credentials path is provided
+    #==============================================================================================================================
+    # Credentials load
+
+    # Check if credentials or credentials path is provided
     if type(credentials) == str:
         if '/' in credentials:
             path = credentials
@@ -82,6 +86,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     else:
         path = ''
     
+    #====================================
     # Load credentials
     if path == '':
         config = credentials
@@ -89,10 +94,14 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         with open(path) as config_file:
             config = json.load(config_file)
     
+    #====================================
     # Check if the query_type value is correct
     all_query_types = ['SELECT', 'INSERT', 'DELETE']
     assert query_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
     
+    #==============================================================================================================================
+    # Credentials read
+
     ## Access DB credentials
     hostname = config.get('DB_HOST') # Read the host name value from the config dictionnary
     port = int(config.get('DB_PORT')) # Get the port from the config file and convert it to int
@@ -100,6 +109,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     password = config.get('DB_PASSWORD') # Get the DB
     database = config.get('DB_DATABASE') # For Redshift, use the database, for MySQL set it by default to ""
     
+    #==============================================================================================================================
     # Set default value for table
     if (query_type == 'SELECT'): # SELECT
         if (table == ""): # If the table is not specified, we get it from the SQL query
@@ -109,6 +119,9 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         else:
             raise SyntaxError('Argument table does not match with SQL statement')
     
+    #==============================================================================================================================
+    # Database connector
+
     # Initiate sql connection to the Database
     if 'redshift' in hostname.split('.'):
         try:
@@ -127,12 +140,12 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
             cur = conn.cursor()
         except:
             raise ValueError('Failed to connect to the MySQL database')
-    
+    #==============================================================================================================================
     # Read query
     if query_type.upper() == "SELECT": # SELECT
         read = pd.read_sql(sql_query, conn)
         return(read)
-    
+    #==============================================================================================================================
     # Insert query
     elif query_type.upper() == "INSERT": # INSERT
         # Check if user defined the table to publish
@@ -145,22 +158,40 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         #calculate the size of the dataframe to be pushed
         num = len(data)
         batches = int(num/10000)+1
-        
+
+        #====================================
+        # Fill Nan values if requested by user
+        if autofill_nan:
+            """
+                For each row of the dataset, we fill the NaN values
+                with a specific string that will be replaced by None
+                value (converted by NULL in MySQL). This aims at avoiding
+                the PyMySQL 1054 error.
+            """
+            data_load = []
+            for ls in [v for v in INPUTS_TO_LOAD.fillna('@@@@EMPTYDATA@@@@').values.tolist()]:
+                data_load += [[None if vv == '@@@@EMPTYDATA@@@@' else vv for vv in ls]]
+        else:
+            data_load = data.values.tolist()
+
+        #====================================
         # Push 10k batches iterativeley and then push the remainder
         if num == 0:
             raise ValueError('len(data) == 0 -> No data to insert')
         elif num > 10000:
             for i in verbose_display(range(0, batches-1), verbose = verbose):
-                cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data[i*10000: (i+1)*10000].values.tolist())
+                cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[i*10000: (i+1)*10000])
                 conn.commit()
-            # push the remainder
-            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data[(batches-1)*10000 :].values.tolist())
+            # Push the remainder
+            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[(batches-1)*10000:])
             conn.commit()
         else:
             # Push everything if less then 10k (SQL Server limit)
-            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data.values.tolist())
+            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load)
             conn.commit()
-    
+
+    #==============================================================================================================================
+    # Delete auery
     elif query_type.upper() == "DELETE": # DELETE
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
