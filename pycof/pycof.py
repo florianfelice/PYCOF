@@ -6,6 +6,7 @@ import json
 import pymysql
 import psycopg2
 import pandas as pd
+import numpy as pd
 from tqdm import tqdm
 
 
