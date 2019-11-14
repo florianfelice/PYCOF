@@ -6,7 +6,7 @@ import json
 import pymysql
 import psycopg2
 import pandas as pd
-import numpy as pd
+import numpy as np
 from tqdm import tqdm
 
 
@@ -170,7 +170,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
                 the PyMySQL 1054 error.
             """
             data_load = []
-            for ls in [v for v in INPUTS_TO_LOAD.fillna('@@@@EMPTYDATA@@@@').values.tolist()]:
+            for ls in [v for v in data.fillna('@@@@EMPTYDATA@@@@').values.tolist()]:
                 data_load += [[None if vv == '@@@@EMPTYDATA@@@@' else vv for vv in ls]]
         else:
             data_load = data.values.tolist()
