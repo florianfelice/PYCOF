@@ -85,6 +85,7 @@ The current version of the library provides:
 * `create_dataset`: function to format a [Pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
 * `group`: will convert an `int` to a `str` with thousand seperator.
 * `replace_zero`: will transform 0 values to `-` for display purposes.
+* `week_sunday`: will return week number of last sunday date of a given date.
 * `display_name`: displays the current user name. Will display either `first`, `last` or `full` name.
 * `write`: writes a `str` to a specific file (usually .txt) in one line of code.
 * `str2bool`: converts string to boolean.
