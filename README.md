@@ -24,12 +24,16 @@ The file follows the below structure:
 ```bash
 {
 	"DB_USER": "",
-	"DB_PWD": "",
+	"DB_PASSWORD": "",
 	"DB_HOST": "",
 	"DB_PORT": "",
-	"DB_DATABASE": ""
+	"DB_DATABASE": "",
+	"__COMMENT_1__": "__ IAM specific, if useIAM=True __",
+	"CLUSTER_NAME": "",
+	"AWS_ACCESS_KEY_ID": "",
+	"AWS_SECRET_ACCESS_KEY": "",
+	"REGION": ""
 }
-
 ```
 
 On Unix based server, run:
@@ -105,3 +109,11 @@ In `remote_execute_sql` you can play with the arguments.
 * To use `/etc/MyNewHost.json` you can either pass `MyNewHost.json` or the whole path to use them.
 * To use `/home/OtherHost.json` you need to pass the whole path.
 
+### 3.2. Can I query a Reshift cluster with IAM user credentials?
+
+The function `renote_execute_sql` can take into account [IAM](https://aws.amazon.com/iam/features/manage-users/) user's credentials. You need to ensure that your credentials file `/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
+The only argument to change when calling the function is to set `useIAM=True`.
+
+The function will then use the [AWS access and secret keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html)
+to ask AWS to provide the user name and password to connect to the cluster.
+This is a much safer approach to connect to a Redshift cluster than using direct cluster's credentials.

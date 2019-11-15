@@ -3,10 +3,15 @@ import sys
 import getpass
 import json
 
+import boto3
+import botocore
+
 import pymysql
 import psycopg2
+
 import pandas as pd
 import numpy as np
+
 from tqdm import tqdm
 import datetime
 
@@ -50,7 +55,7 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 
 ## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True):
+def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
 
@@ -65,6 +70,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         credentials (dict): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         verbose (bool): Display progression bar (defaults True).
         autofill_nan (bool): Replace NaN values by 'NULL' (defaults True).
+        useIAM (bool): Get AWS IAM credentials using access and secret key (defaults False).
 
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
@@ -110,6 +116,29 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     user = config.get('DB_USER')    # Get the user name for connecting to the DB
     password = config.get('DB_PASSWORD') # Get the DB
     database = config.get('DB_DATABASE') # For Redshift, use the database, for MySQL set it by default to ""
+    try:
+        access_key   = config.get("AWS_ACCESS_KEY_ID")
+        secret_key   = config.get("AWS_SECRET_ACCESS_KEY")
+        region       = config.get("REGION")
+        cluster_name = config.get("CLUSTER_NAME")
+    except:
+        access_key   = ""
+        secret_key   = ""
+        region       = "eu-west-1"
+        cluster_name = ""
+
+    # Get AWS credentials with access and secret key
+    if (useIAM):
+        session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
+        rd_client = session.client('redshift')
+        cluster_creds = rd_client.get_cluster_credentials(
+            DbUser=user,
+            DbName=database, 
+            ClusterIdentifier=cluster_name, 
+            AutoCreate=False)
+        # Update user and password
+        user     = cluster_creds['DbUser']
+        password = cluster_creds['DbPassword']
     
     #==============================================================================================================================
     # Set default value for table
