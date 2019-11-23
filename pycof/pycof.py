@@ -104,7 +104,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     
     #====================================
     # Check if the query_type value is correct
-    all_query_types = ['SELECT', 'INSERT', 'DELETE']
+    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY']
     assert query_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
     
     #==============================================================================================================================
@@ -223,7 +223,7 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
 
     #==============================================================================================================================
     # Delete auery
-    elif query_type.upper() == "DELETE": # DELETE
+    elif query_type.upper() in ["DELETE", "COPY"]:
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
             conn.commit()

@@ -111,7 +111,7 @@ In `remote_execute_sql` you can play with the arguments.
 
 ### 3.2. Can I query a Reshift cluster with IAM user credentials?
 
-The function `renote_execute_sql` can take into account [IAM](https://aws.amazon.com/iam/features/manage-users/) user's credentials. You need to ensure that your credentials file `/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
+The function `remote_execute_sql` can take into account [IAM](https://aws.amazon.com/iam/features/manage-users/) user's credentials. You need to ensure that your credentials file `/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
 The only argument to change when calling the function is to set `useIAM=True`.
 
 The function will then use the [AWS access and secret keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html)
