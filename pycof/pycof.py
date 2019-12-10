@@ -12,6 +12,8 @@ import psycopg2
 import pandas as pd
 import numpy as np
 
+import re
+
 from tqdm import tqdm
 import datetime
 
@@ -55,7 +57,7 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 
 ## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False):
+def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=7*24*60*60, cache_name=None):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
 
@@ -75,6 +77,29 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
     """
+    #==============================================================================================================================
+    # Check caching
+
+    if " WHERE " in sql_query.upper():
+        to_parse = ''.join(sql_query.upper().split(" WHERE ")[1:]).split(" GROUP BY ")[0].split(" ORDER BY ")[0]
+    else:
+        to_parse = sql_query
+
+    file_name = ''.join(re.split("[^a-zA-Z0-9]*", to_parse)) + '.csv' if cache_name is None else cache_name
+
+    temp = f'C:/Users/{getpass.getuser()}/Documents/' if sys.platform == 'win32' else '/tmp/'
+
+    if (query_type.upper() == "SELECT") & (file_name in os.listdir(temp)):
+        # If file exists, checks its age
+        if (query_type.upper() == "SELECT") & ((datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(temp + file_name).st_mtime)).total_seconds() < cache_time):
+            week_list = pd.read_csv(temp + file_name)
+            verbose_display('Reading the temp file', verbose)
+        else:
+            verbose_display('Running SQL', verbose)
+            pass
+    else:
+        pass
+
     #==============================================================================================================================
     # Credentials load
 
@@ -175,6 +200,8 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     # Read query
     if query_type.upper() == "SELECT": # SELECT
         read = pd.read_sql(sql_query, conn)
+        if cache:
+            read.to_csv(temp + file_name, index=False)
         return(read)
     #==============================================================================================================================
     # Insert query
