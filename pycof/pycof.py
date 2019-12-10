@@ -57,7 +57,7 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 
 ## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=7*24*60*60, cache_name=None):
+def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
 
@@ -73,6 +73,9 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         verbose (bool): Display progression bar (defaults True).
         autofill_nan (bool): Replace NaN values by 'NULL' (defaults True).
         useIAM (bool): Get AWS IAM credentials using access and secret key (defaults False).
+        cache (bool): Caches the data to avoid running again the same SQL query (defaults False).
+        cache_time (int): How long to keep the caching data without reloading (defaults 1 day).
+        cache_name (str): File name for storing cache data, if None will use WHERE clause from SQL (defaults None).
 
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
@@ -92,8 +95,10 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(temp)):
         # If file exists, checks its age
         if (query_type.upper() == "SELECT") & ((datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(temp + file_name).st_mtime)).total_seconds() < cache_time):
-            week_list = pd.read_csv(temp + file_name)
+            read = pd.read_csv(temp + file_name)
             verbose_display('Reading the temp file', verbose)
+            return read
+            sys.exit()
         else:
             verbose_display('Running SQL', verbose)
             pass
