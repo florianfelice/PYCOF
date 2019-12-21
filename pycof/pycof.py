@@ -3,23 +3,20 @@ import sys
 import getpass
 import json
 
-import boto3
-import botocore
-
-import pymysql
-import psycopg2
-
 import pandas as pd
 import numpy as np
-
-import re
 
 from tqdm import tqdm
 import datetime
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+from .sql.helper import _get_config, _get_credentials, _define_connector
+from .sql.helper import _insert_data, _cache
 
 ##############################################################################################################################
-
 
 ## Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
 
@@ -55,7 +52,6 @@ def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list 
 
 ##############################################################################################################################
 
-
 ## Publish or read from DB
 def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
     """Simplified function for executing SQL queries.
@@ -80,95 +76,15 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     Returns:
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
     """
-    #==============================================================================================================================
-    # Check caching
-
-    if " WHERE " in sql_query.upper():
-        to_parse = ''.join(sql_query.upper().split(" WHERE ")[1:]).split(" GROUP BY ")[0].split(" ORDER BY ")[0]
-    else:
-        to_parse = sql_query
-
-    file_name = ''.join(re.split("[^a-zA-Z0-9]*", to_parse)) + '.csv' if cache_name is None else cache_name
-
-    temp = f'C:/Users/{getpass.getuser()}/Documents/' if sys.platform == 'win32' else '/tmp/'
-
-    if (query_type.upper() == "SELECT") & (file_name in os.listdir(temp)):
-        # If file exists, checks its age
-        if (query_type.upper() == "SELECT") & ((datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(temp + file_name).st_mtime)).total_seconds() < cache_time):
-            read = pd.read_csv(temp + file_name)
-            verbose_display('Reading the temp file', verbose)
-            return read
-            sys.exit()
-        else:
-            verbose_display('Running SQL', verbose)
-            pass
-    else:
-        pass
 
     #==============================================================================================================================
     # Credentials load
-
-    # Check if credentials or credentials path is provided
-    if type(credentials) == str:
-        if '/' in credentials:
-            path = credentials
-        elif sys.platform == 'win32':
-            path = 'C:/Windows/' + credentials
-        else:
-            path = '/etc/' + credentials
-    elif (type(credentials) == dict) & (credentials == {}):
-        if sys.platform == 'win32':
-            path = 'C:/Windows/config.json'
-        else:
-            path = '/etc/config.json'
-    else:
-        path = ''
-    
-    #====================================
-    # Load credentials
-    if path == '':
-        config = credentials
-    else:
-        with open(path) as config_file:
-            config = json.load(config_file)
+    hostname, port, user, password, database = _get_credentials(_get_config(credentials), useIAM)
     
     #====================================
     # Check if the query_type value is correct
     all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY']
     assert query_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
-    
-    #==============================================================================================================================
-    # Credentials read
-
-    ## Access DB credentials
-    hostname = config.get('DB_HOST') # Read the host name value from the config dictionnary
-    port = int(config.get('DB_PORT')) # Get the port from the config file and convert it to int
-    user = config.get('DB_USER')    # Get the user name for connecting to the DB
-    password = config.get('DB_PASSWORD') # Get the DB
-    database = config.get('DB_DATABASE') # For Redshift, use the database, for MySQL set it by default to ""
-    try:
-        access_key   = config.get("AWS_ACCESS_KEY_ID")
-        secret_key   = config.get("AWS_SECRET_ACCESS_KEY")
-        region       = config.get("REGION")
-        cluster_name = config.get("CLUSTER_NAME")
-    except:
-        access_key   = ""
-        secret_key   = ""
-        region       = "eu-west-1"
-        cluster_name = ""
-
-    # Get AWS credentials with access and secret key
-    if (useIAM):
-        session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
-        rd_client = session.client('redshift')
-        cluster_creds = rd_client.get_cluster_credentials(
-            DbUser=user,
-            DbName=database, 
-            ClusterIdentifier=cluster_name, 
-            AutoCreate=False)
-        # Update user and password
-        user     = cluster_creds['DbUser']
-        password = cluster_creds['DbPassword']
     
     #==============================================================================================================================
     # Set default value for table
@@ -182,79 +98,22 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     
     #==============================================================================================================================
     # Database connector
-
-    # Initiate sql connection to the Database
-    if 'redshift' in hostname.split('.'):
-        try:
-            conn = psycopg2.connect(host=hostname, port=port, user=user, password=password, database=database)
-            cur = conn.cursor()
-        except:
-            raise ValueError('Failed to connect to the Redshfit cluster')
-    else:
-        try:
-            # Add new encoder of numpy.float64
-            pymysql.converters.encoders[np.float64] = pymysql.converters.escape_float
-            pymysql.converters.conversions = pymysql.converters.encoders.copy()
-            pymysql.converters.conversions.update(pymysql.converters.decoders)
-            # Create connection
-            conn = pymysql.connect(host=hostname, port=port, user=user, password=password)
-            cur = conn.cursor()
-        except:
-            raise ValueError('Failed to connect to the MySQL database')
+    conn, cur = _define_connector(hostname, port, user, password, database)
+    
     #==============================================================================================================================
     # Read query
     if query_type.upper() == "SELECT": # SELECT
         read = pd.read_sql(sql_query, conn)
         if cache:
-            read.to_csv(temp + file_name, index=False)
+            read = cache(sql_query, conn, verbose=verbose)
         return(read)
     #==============================================================================================================================
     # Insert query
     elif query_type.upper() == "INSERT": # INSERT
-        # Check if user defined the table to publish
-        if table == "":
-            raise SyntaxError('Destination table not defined by user')
-        # Create the column string and the number of columns used for push query 
-        columns_string = (', ').join(list(data.columns))
-        col_num = len(list(data.columns))-1
-        
-        #calculate the size of the dataframe to be pushed
-        num = len(data)
-        batches = int(num/10000)+1
-
-        #====================================
-        # Fill Nan values if requested by user
-        if autofill_nan:
-            """
-                For each row of the dataset, we fill the NaN values
-                with a specific string that will be replaced by None
-                value (converted by NULL in MySQL). This aims at avoiding
-                the PyMySQL 1054 error.
-            """
-            data_load = []
-            for ls in [v for v in data.fillna('@@@@EMPTYDATA@@@@').values.tolist()]:
-                data_load += [[None if vv == '@@@@EMPTYDATA@@@@' else vv for vv in ls]]
-        else:
-            data_load = data.values.tolist()
-
-        #====================================
-        # Push 10k batches iterativeley and then push the remainder
-        if num == 0:
-            raise ValueError('len(data) == 0 -> No data to insert')
-        elif num > 10000:
-            for i in verbose_display(range(0, batches-1), verbose = verbose):
-                cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[i*10000: (i+1)*10000])
-                conn.commit()
-            # Push the remainder
-            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[(batches-1)*10000:])
-            conn.commit()
-        else:
-            # Push everything if less then 10k (SQL Server limit)
-            cur.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load)
-            conn.commit()
+        _insert_data(data, table, conn, cur, autofill_nan, verbose)
 
     #==============================================================================================================================
-    # Delete auery
+    # Delete query
     elif query_type.upper() in ["DELETE", "COPY"]:
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
@@ -262,10 +121,42 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         else:
             raise ValueError('Table does not match with SQL query')
     else:
-        raise SyntaxError('Unknown query_type, should be as: {all_query_types}')
+        raise SyntaxError(f'Unknown query_type, should be as: {all_query_types}')
     
     #close sql connection
     conn.close()
+
+
+
+##############################################################################################################################
+
+## Send an Email
+def send_email(to, subject, body, cc=None, credentials={}):
+    config = _get_config(credentials)
+    msg = MIMEMultipart()
+    msg['From'] = config.get('EMAIL_USER')
+    msg['To'] = to
+    msg['Cc'] = '' if cc is None else cc
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    text = msg.as_string()
+
+    # Server login
+    try:
+        port = int(config.get('EMAIL_PORT'))
+    except:
+        port = 587 # Default Google port number
+    connection = config.get('EMAIL_SMTP') + ':' + 'port'
+    server = smtplib.SMTP(connection, port=port)
+    server.starttls()
+    server.login(user=config.get('EMAIL_USER'), password=config.get('EMAIL_PASSWORD'))
+
+    # Send email
+    server.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
+    server.quit()
+
 
 
 #############################################################################################################################
