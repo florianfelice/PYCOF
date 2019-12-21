@@ -131,12 +131,12 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
 ##############################################################################################################################
 
 ## Send an Email
-def send_email(to, subject, body, cc=None, credentials={}):
+def send_email(to, subject, body, cc='', credentials={}):
     config = _get_config(credentials)
     msg = MIMEMultipart()
     msg['From'] = config.get('EMAIL_USER')
     msg['To'] = to
-    msg['Cc'] = '' if cc is None else cc
+    msg['Cc'] = '' if cc == '' else cc
     msg['Subject'] = subject
 
     msg.attach(MIMEText(body, 'plain'))
