@@ -147,9 +147,9 @@ def send_email(to, subject, body, cc=None, credentials={}):
     try:
         port = int(config.get('EMAIL_PORT'))
     except:
-        port = 587 # Default Google port number
-    connection = config.get('EMAIL_SMTP') + ':' + 'port'
-    server = smtplib.SMTP(connection, port=port)
+        port = '587' # Default Google port number
+    connection = config.get('EMAIL_SMTP') + ':' + port
+    server = smtplib.SMTP(connection)
     server.starttls()
     server.login(user=config.get('EMAIL_USER'), password=config.get('EMAIL_PASSWORD'))
 
