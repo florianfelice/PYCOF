@@ -16,6 +16,13 @@ from email.mime.multipart import MIMEMultipart
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
 
+
+##############################################################################################################################
+
+## TODO: Check _get_credentials for IAM roles
+## TODO: Test send_email by list of recipients
+## TODO: remote_execute_sql with dump to S3 or to S3 and Redshift.
+
 ##############################################################################################################################
 
 ## Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
@@ -132,6 +139,21 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
 
 ## Send an Email
 def send_email(to, subject, body, cc='', credentials={}):
+    """Simplified function to send emails.
+    Will look at the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
+
+    Example:
+        > content = 'This is a test'
+        > send_email(to='test@domain.com', body=content, subject='Hello world!')
+
+    Args:
+        to (str): Recipient of the email.
+        subject (str): Subject of the email.
+        body (str): Content of the email to be send.
+        cc (str): Email address to be copied (defaults None).
+        credentials (dict): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
+        verbose (bool): Displays if the email was sent successfully (defaults False).
+    """
     config = _get_config(credentials)
     msg = MIMEMultipart()
     msg['From'] = config.get('EMAIL_USER')
