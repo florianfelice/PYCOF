@@ -161,7 +161,8 @@ def send_email(to, subject, body, cc='', credentials={}):
     msg['Cc'] = '' if cc == '' else cc
     msg['Subject'] = subject
 
-    msg.attach(MIMEText(body, 'plain'))
+    mail_type = 'html' if '</' in body else 'plain'
+    msg.attach(MIMEText(body, mail_type))
 
     text = msg.as_string()
 
