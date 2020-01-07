@@ -89,6 +89,7 @@ The current version of the library provides:
 * **`week_sunday`**: will return week number of last sunday date of a given date.
 * **`display_name`**: displays the current user name. Will display either `first`, `last` or `full` name.
 * **`write`**: writes a `str` to a specific file (usually .txt) in one line of code.
+* **`file_age`**: computes the age (in days, hours, ...) of a given local file.
 * **`str2bool`**: converts string to boolean.
 * **`wmape`**: computes the [Weighted Mean Absolute Percentage Error](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) between two vectors.
 * **`mse`**: computes the [Mean Squared Error](https://en.wikipedia.org/wiki/Mean_squared_error) between two vectors. Returns the RMSE (Root MSE) if `root` is set to `True`.
