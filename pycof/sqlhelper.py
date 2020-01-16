@@ -13,44 +13,61 @@ from tqdm import tqdm
 import os, sys
 import json
 import datetime
+import hashlib
+
+from .misc import write, file_age, verbose_display
 
 
 #========================
 ### Cache data from SQL
 
-def _cache(sql, connection, cache_file_name=None, verbose=False):
+def _cache(sql, connection, query_type="SELECT", cache_time=24*60*60, cache_file_name=None, verbose=False):
+    
+    # Define the root folder depending on the OS
     rt = 'C:' + os.sep if sys.platform == 'win32' else '/'
+    
     # Check if cache folder exists
     if not os.path.exists(os.path.join(rt, 'tmp', 'pycof', 'cache')):
         # If the PYCOF cache folder does not exist, we create all folders
         folds, fs = [rt + 'tmp', 'pycof', 'cache', 'queries'], []
+
         for fold in folds:
+            # For each sub folder, we check if it already esists and created if not
             fs = fs + [fold]
             os.mkdir(os.path.join(*fs)) if os.path.exists(os.path.join(*fs)) == False else ''
-        # Create data folder
-        data_fold = os.path.join('/tmp', 'pycof', 'cache', 'data')
+        
+        # Create data folder if cache folder does not exist
+        data_fold = os.path.join(rt, 'tmp', 'pycof', 'cache', 'data')
         os.mkdir(data_fold) if os.path.exists(data_fold) == False else ''
     
     # Hash the file's name to save the query and the data
-    file_name = hash(sql) if cache_file_name is None else cache_file_name
+    file_name = hashlib.sha224(bytes(sql, 'utf-8')).hexdigest().replace('-', 'm') if cache_file_name is None else cache_file_name
 
-    # Set the Query and data paths
-    query_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'queries')
-    data_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'data')
+    # Set the query and data paths
+    query_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'queries') + '/'
+    data_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'data') + '/'
     
-
+    # Chec if the cached data already exists
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
         # If file exists, checks its age
-        file_age = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(data_path + file_name).st_mtime)).total_seconds()
+        age = file_age(data_path + file_name)
         
-        if (query_type.upper() == "SELECT") & (file_age < cache_time):
+        if (query_type.upper() == "SELECT") & (age < cache_time):
+            # If file is younger than cache_time, we read the cached data
             read = pd.read_csv(data_path + file_name)
+            verbose_display('Reading cached data', verbose)
         else:
-            read = pd.read_sql(sql_query, connection)
+            # Else we execute the SQL query and save the ouput + the query
+            read = pd.read_sql(sql, connection)
             write(sql, query_path + file_name, perm='w', verbose=verbose)
+            read.to_csv(data_path + file_name, index=False)
+            verbose_display('Execute SQL query and cache the data', verbose)
     else:
-        read = pd.read_sql(sql_query, connection)
+        # If the file does not even exist, we execute SQL, save the query and its output
+        read = pd.read_sql(sql, connection)
         write(sql, query_path + file_name, perm='w', verbose=verbose)
+        read.to_csv(data_path + file_name, index=False)
+        verbose_display('Execute SQL query and cache the data', verbose)
     
     return read
 
@@ -95,20 +112,19 @@ def _get_credentials(config, useIAM=False):
     user = config.get('DB_USER')    # Get the user name for connecting to the DB
     password = config.get('DB_PASSWORD') # Get the DB
     database = config.get('DB_DATABASE') # For Redshift, use the database, for MySQL set it by default to ""
-    try:
-        access_key   = config.get("AWS_ACCESS_KEY_ID")
-        secret_key   = config.get("AWS_SECRET_ACCESS_KEY")
-        region       = config.get("REGION")
-        cluster_name = config.get("CLUSTER_NAME")
-    except:
-        access_key   = ""
-        secret_key   = ""
-        region       = "eu-west-1"
-        cluster_name = ""
-
+    #
+    access_key   = config.get("AWS_ACCESS_KEY_ID")
+    secret_key   = config.get("AWS_SECRET_ACCESS_KEY")
+    region       = config.get("REGION")
+    cluster_name = config.get("CLUSTER_NAME")
+    #
     # Get AWS credentials with access and secret key
-    if (useIAM):
+    if (useIAM) & (secret_key in [None, 'None', '']):
+        session = boto3.Session(profile_name='default')
+    elif (useIAM):
         session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
+    #
+    if useIAM:
         rd_client = session.client('redshift')
         cluster_creds = rd_client.get_cluster_credentials(
             DbUser=user,
@@ -118,7 +134,7 @@ def _get_credentials(config, useIAM=False):
         # Update user and password
         user     = cluster_creds['DbUser']
         password = cluster_creds['DbPassword']
-    
+    #
     return hostname, port, user, password, database
 
 

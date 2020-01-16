@@ -15,52 +15,18 @@ from email.mime.multipart import MIMEMultipart
 
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
+from .misc import write, file_age, verbose_display
 
 
 ##############################################################################################################################
 
-## TODO: Check _get_credentials for IAM roles
 ## TODO: Test send_email by list of recipients
 ## TODO: remote_execute_sql with dump to S3 or to S3 and Redshift.
 
 ##############################################################################################################################
 
-## Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
-
-def verbose_display(element, verbose = True, sep = ' ', end = '\n', return_list = False):
-    """Extended print function with tqdm display for loops.
-    Also has argument verbose for automated scripts with overall verbisity argument
-
-    Example:
-        > for i in pycof.verbose_display(range(15)):
-        ...     i += 1
-    
-    Args:
-        element (str): The element to be displayed. Can either be str, range, list.
-        verbose (bool): Display the element or not (defaults True).
-        sep (str): The deperator to use of displaying different lists/strings (defaults ' ').
-        end (str): How to end the display (defaults '\n').
-        return_list (bool): If it is a list, can return in for paragraph format (defaults False).
-
-    Returns:
-        str: The element to be displayed.
-    """
-    if (verbose in [1, True]) & (type(element) in [list, range]) & (return_list == False):
-        return(tqdm(element))
-    elif (verbose in [1, True]) & (type(element) in [list]) & (return_list == True):
-        return(print(*element, sep = sep, end = end))
-    elif (verbose in [1, True]) & (type(element) in [str]) & (return_list == False):
-        return(print(element, sep = sep, end = end))
-    elif (verbose in [0, False]) & (type(element) in [str, type(None)]):
-        disp = 0 # we don't display anything
-    else:
-        return(element)
-
-
-##############################################################################################################################
-
 ## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
+def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
     """Simplified function for executing SQL queries.
     Will look qt the credentials at /etc/config.json. User can also pass a dictionnary for credentials.
 
@@ -84,21 +50,34 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
         pandas.DataFrame: Result of an SQL query in case of query_type as SELECT.
     """
 
+    #====================================
+    # Define the SQL type
+    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY']
+
+    if (query_type != ""):
+        #Use user input if query_type is not as its default value
+        sql_type = query_type
+    elif (sql_query != ""):
+        # If a query is inserted, use select.
+        # For DELETE or COPY, user needs to provide the query_type
+        sql_type = "SELECT"
+    elif (data != {}):
+        # If data is provided, use INSERT sql_type
+        sql_type = 'INSERT'
+    else:
+        # Check if the query_type value is correct
+        assert sql_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
+
     #==============================================================================================================================
     # Credentials load
     hostname, port, user, password, database = _get_credentials(_get_config(credentials), useIAM)
     
-    #====================================
-    # Check if the query_type value is correct
-    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY']
-    assert query_type.upper() in all_query_types,  f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
-    
     #==============================================================================================================================
     # Set default value for table
-    if (query_type == 'SELECT'): # SELECT
+    if (sql_type == 'SELECT'): # SELECT
         if (table == ""): # If the table is not specified, we get it from the SQL query
             table = sql_query.replace('\n', ' ').split('FROM ')[1].split(' ')[0]
-        elif (query_type == 'SELECT') & (table.upper() in sql_query.upper()):
+        elif (sql_type == 'SELECT') & (table.upper() in sql_query.upper()):
             table = table
         else:
             raise SyntaxError('Argument table does not match with SQL statement')
@@ -109,26 +88,27 @@ def remote_execute_sql(sql_query="", query_type="SELECT", table="", data={}, cre
     
     #==============================================================================================================================
     # Read query
-    if query_type.upper() == "SELECT": # SELECT
-        read = pd.read_sql(sql_query, conn)
+    if sql_type.upper() == "SELECT": # SELECT
         if cache:
-            read = cache(sql_query, conn, verbose=verbose)
+            read = _cache(sql_query, conn, sql_type, cache_time=cache_time, verbose=verbose)
+        else:
+            read = pd.read_sql(sql_query, conn)
         return(read)
     #==============================================================================================================================
     # Insert query
-    elif query_type.upper() == "INSERT": # INSERT
+    elif sql_type.upper() == "INSERT": # INSERT
         _insert_data(data, table, conn, cur, autofill_nan, verbose)
 
     #==============================================================================================================================
     # Delete query
-    elif query_type.upper() in ["DELETE", "COPY"]:
+    elif sql_type.upper() in ["DELETE", "COPY"]:
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
             conn.commit()
         else:
             raise ValueError('Table does not match with SQL query')
     else:
-        raise SyntaxError(f'Unknown query_type, should be as: {all_query_types}')
+        raise ValueError(f'Unknown query_type, should be as: {all_query_types}')
     
     #close sql connection
     conn.close()
@@ -362,27 +342,6 @@ def display_name(display='first'):
                 return (user)
     except:
         return(getpass.getuser())
-
-##############################################################################################################################
-
-# Write to a txt file
-def write(text, file, perm = 'a', verbose = False, end_row = '\n'):
-    """Write a line of text into a file (usually .txt).
-
-    Args:
-        text (str): Line of text to be inserted in the file.
-        file (str): File on which to write (/path/to/file.txt). Can be any format, not necessarily txt.
-        perm (str): Permission to use when opening file (usually 'a' for appending text, or 'w' to (re)write file).
-        verbose (bool): Return the length of the inserted text if set to True (defaults False).
-        end_row (str): Character to end the row (defaults '\n').
-
-    Returns:
-        int: Number of characters inserted if verbose is True.
-    """
-    with open(file, perm) as f:
-        f.write(text + end_row)
-    if verbose:
-        return(len(text))
 
 
 ##############################################################################################################################
