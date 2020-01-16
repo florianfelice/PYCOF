@@ -11,6 +11,7 @@ import re
 from tqdm import tqdm
 
 import os, sys
+import getpass
 import json
 import datetime
 import hashlib
@@ -24,12 +25,12 @@ from .misc import write, file_age, verbose_display
 def _cache(sql, connection, query_type="SELECT", cache_time=24*60*60, cache_file_name=None, verbose=False):
     
     # Define the root folder depending on the OS
-    rt = 'C:' + os.sep if sys.platform == 'win32' else '/'
+    root_path = f'C:/Users/{getpass.getuser()}/' + os.sep if sys.platform == 'win32' else '/'
     
     # Check if cache folder exists
-    if not os.path.exists(os.path.join(rt, 'tmp', 'pycof', 'cache')):
+    if not os.path.exists(os.path.join(root_path, 'tmp', 'pycof', 'cache')):
         # If the PYCOF cache folder does not exist, we create all folders
-        folds, fs = [rt + 'tmp', 'pycof', 'cache', 'queries'], []
+        folds, fs = [root_path + 'tmp', 'pycof', 'cache', 'queries'], []
 
         for fold in folds:
             # For each sub folder, we check if it already esists and created if not
@@ -37,15 +38,15 @@ def _cache(sql, connection, query_type="SELECT", cache_time=24*60*60, cache_file
             os.mkdir(os.path.join(*fs)) if os.path.exists(os.path.join(*fs)) == False else ''
         
         # Create data folder if cache folder does not exist
-        data_fold = os.path.join(rt, 'tmp', 'pycof', 'cache', 'data')
+        data_fold = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data')
         os.mkdir(data_fold) if os.path.exists(data_fold) == False else ''
     
     # Hash the file's name to save the query and the data
     file_name = hashlib.sha224(bytes(sql, 'utf-8')).hexdigest().replace('-', 'm') if cache_file_name is None else cache_file_name
 
     # Set the query and data paths
-    query_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'queries') + '/'
-    data_path = os.path.join(rt, 'tmp', 'pycof', 'cache', 'data') + '/'
+    query_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'queries') + '/'
+    data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
     
     # Chec if the cached data already exists
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
@@ -80,12 +81,12 @@ def _get_config(credentials):
         if '/' in credentials:
             path = credentials
         elif sys.platform == 'win32':
-            path = 'C:/Windows/' + credentials
+            path = f'C:/Users/{getpass.getuser()}/' + credentials
         else:
             path = '/etc/' + credentials
     elif (type(credentials) == dict) & (credentials == {}):
         if sys.platform == 'win32':
-            path = 'C:/Windows/config.json'
+            path = f'C:/Users/{getpass.getuser()}/config.json'
         else:
             path = '/etc/config.json'
     else:
