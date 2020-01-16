@@ -126,15 +126,18 @@ def _get_credentials(config, useIAM=False):
         session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
     #
     if useIAM:
-        rd_client = session.client('redshift')
-        cluster_creds = rd_client.get_cluster_credentials(
-            DbUser=user,
-            DbName=database, 
-            ClusterIdentifier=cluster_name, 
-            AutoCreate=False)
-        # Update user and password
-        user     = cluster_creds['DbUser']
-        password = cluster_creds['DbPassword']
+        try:
+            rd_client = session.client('redshift')
+            cluster_creds = rd_client.get_cluster_credentials(
+                DbUser=user,
+                DbName=database, 
+                ClusterIdentifier=cluster_name, 
+                AutoCreate=False)
+            # Update user and password
+            user     = cluster_creds['DbUser']
+            password = cluster_creds['DbPassword']
+        except:
+            raise ValueError('Cannot connect to AWS API, please check your config file')
     #
     return hostname, port, user, password, database
 
