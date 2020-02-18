@@ -80,6 +80,7 @@ The current version of the library provides:
 
 * **`verbose_display`**: extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
 * **`remote_execute_sql`**: aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.
+* **`read_sql`**: read and format an SQL query file.
 * **`send_email`**: simple function to send email to contacts in a concise way.
 * **`add_zero`**: simple function to convert `int` to `str` by adding a 0 is less than 10.
 * **`OneHotEncoding`**: performs [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
@@ -199,3 +200,20 @@ pc.send_email(to='test@domain.com', body=content, subject='Hello world!')
 ```
 
 You can choose to copy some other users with the `cc` argument and choose a different credential set, as explained [above](#34-how-to-use-different-credential-sets).
+
+
+### 3.6 How to use `read_sql`?
+
+The function `read_sql` allows to load an SQL file, parse and format it.
+It will remove training spaces, comments and replace the f-strings with the provided values.
+You can then use the output of it directly into `remote_execute_sql`.
+
+```python
+from pycof as pc
+
+## Set up the SQL query
+sql = pc.read_sql('/path/to/file.sql', country='FR', time='CURDATE()')
+
+## The function will return a pandas dataframe
+df = pc.remote_execute_sql(sql)
+```

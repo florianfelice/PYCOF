@@ -55,20 +55,20 @@ def _cache(sql, connection, query_type="SELECT", cache_time=24*60*60, cache_file
         
         if (query_type.upper() == "SELECT") & (age < cache_time):
             # If file is younger than cache_time, we read the cached data
-            read = pd.read_csv(data_path + file_name)
             verbose_display('Reading cached data', verbose)
+            read = pd.read_csv(data_path + file_name)
         else:
             # Else we execute the SQL query and save the ouput + the query
+            verbose_display('Execute SQL query and cache the data', verbose)
             read = pd.read_sql(sql, connection)
             write(sql, query_path + file_name, perm='w', verbose=verbose)
             read.to_csv(data_path + file_name, index=False)
-            verbose_display('Execute SQL query and cache the data', verbose)
     else:
         # If the file does not even exist, we execute SQL, save the query and its output
+        verbose_display('Execute SQL query and cache the data', verbose)
         read = pd.read_sql(sql, connection)
         write(sql, query_path + file_name, perm='w', verbose=verbose)
         read.to_csv(data_path + file_name, index=False)
-        verbose_display('Execute SQL query and cache the data', verbose)
     
     return read
 
@@ -119,11 +119,22 @@ def _get_credentials(config, useIAM=False):
     region       = config.get("REGION")
     cluster_name = config.get("CLUSTER_NAME")
     #
+    boto_error = """Cannot initialize the boto3 session. Please check your config file and ensure awscli is installed.\n
+    To install awcli, please run: \n
+    pip install awscli -y && aws configure\n
+    Values from `aws configure` command can remain empty.
+    """
     # Get AWS credentials with access and secret key
     if (useIAM) & (secret_key in [None, 'None', '']):
-        session = boto3.Session(profile_name='default')
+        try:
+            session = boto3.Session(profile_name='default')
+        except:
+            raise SystemError(boto_error)
     elif (useIAM):
-        session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
+        try:
+            session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
+        except:
+            raise SystemError(boto_error)
     #
     if useIAM:
         try:

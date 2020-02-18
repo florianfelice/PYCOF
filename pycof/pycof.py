@@ -117,6 +117,39 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
 ##############################################################################################################################
 
+def read_sql(path, parse=True, **kwargs):
+    """Read and parse an SQL file.
+    Will remove comments, trailing spaces, breaklines and tabs. It will also replace f-strings with provided values.
+
+    Example:
+        > read_sql('/path/to/file.sql', country='FR')
+
+    Args:
+        path (str): path to the SQL file
+        parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True)
+
+    """
+    query = []
+    
+    if parse:
+        with open(path) as f:
+            file = f.read()
+        for line in file.split('\n'):
+            l = line.strip() # Removing trailing spaces
+            l = l.format(**kwargs) # Formating
+            l = l.split('--')[0] # Remove comments
+            if l != '':
+                query += [l]
+        f_query = query
+        return re.sub(' +', ' ', ' '.join(f_query))
+    else:
+        with open(path) as f:
+            for line in f:
+                print(line.rstrip())
+
+
+##############################################################################################################################
+
 ## Send an Email
 def send_email(to, subject, body, cc='', credentials={}):
     """Simplified function to send emails.
