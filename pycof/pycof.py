@@ -6,6 +6,7 @@ import json
 import pandas as pd
 import numpy as np
 import re
+import xlrd
 
 from tqdm import tqdm
 import datetime
@@ -133,7 +134,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True).
         remove_comments (bool): Remove comments from the loaded file (defaults True).
         sep (str): Columns delimiter for pd.read_csv (defaults ',').
-        
+
 
     """
     ext = path.split('.')[-1] if extension is None else extension
