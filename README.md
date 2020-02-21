@@ -202,9 +202,9 @@ pc.send_email(to='test@domain.com', body=content, subject='Hello world!')
 You can choose to copy some other users with the `cc` argument and choose a different credential set, as explained [above](#34-how-to-use-different-credential-sets).
 
 
-### 3.6 How to use `read_sql`?
+### 3.6 How to use `f_read`?
 
-The function `read_sql` allows to load an SQL file, parse and format it.
+The function `f_read` allows to load an SQL file, parse and format it.
 It will remove training spaces, comments and replace the f-strings with the provided values.
 You can then use the output of it directly into `remote_execute_sql`.
 
@@ -212,8 +212,21 @@ You can then use the output of it directly into `remote_execute_sql`.
 from pycof as pc
 
 ## Set up the SQL query
-sql = pc.read_sql('/path/to/file.sql', country='FR', time='CURDATE()')
+sql = pc.f_read('/path/to/file.sql', country='FR', time='CURDATE()')
 
 ## The function will return a pandas dataframe
 df = pc.remote_execute_sql(sql)
+```
+
+You can also load standard files such as `csv`, `xlsx`, etc... and will return a pandas DataFrame.
+
+```python
+from pycof as pc
+
+# Load a csv dataset
+df = pc.f_read('/path/to/file.csv', sep=';')
+# Or, for xlsx
+df = pc.f_read('/path/to/file.xslx')
+# Finally, for txt with DataFrame structure, specify csv as extension
+df = pc.f_read('/path/to/file.txt', extension='csv')
 ```

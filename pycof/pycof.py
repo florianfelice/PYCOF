@@ -5,6 +5,7 @@ import json
 
 import pandas as pd
 import numpy as np
+import re
 
 from tqdm import tqdm
 import datetime
@@ -117,35 +118,85 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
 ##############################################################################################################################
 
-def read_sql(path, parse=True, **kwargs):
-    """Read and parse an SQL file.
-    Will remove comments, trailing spaces, breaklines and tabs. It will also replace f-strings with provided values.
+def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, **kwargs):
+    """Read and parse a data file.
+    It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
+    The function will by default detect the extension from the file path. You can force an extension with the argument.
+    It can remove comments, trailing spaces, breaklines and tabs. It can also replace f-strings with provided values.
 
     Example:
         > read_sql('/path/to/file.sql', country='FR')
 
     Args:
-        path (str): path to the SQL file
-        parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True)
+        path (str): path to the SQL file.
+        extension (str): extension to use. Can be 'csv', 'xslsx', 'sql', 'html', 'py', 'read-only' (defaults None).
+        parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True).
+        remove_comments (bool): Remove comments from the loaded file (defaults True).
+        sep (str): Columns delimiter for pd.read_csv (defaults ',').
+        
 
     """
-    query = []
+    ext = path.split('.')[-1] if extension is None else extension
+    data = []
+    ret = True # Need to return a value?
     
-    if parse:
+    ## CSV
+    if ext.lower() in ['csv']:
+        data = pd.read_csv(path, sep=sep, **kwargs)
+    ## XLSX
+    elif ext.lower() in ['xls', 'xlsx']:
+        data = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
+    ## SQL
+    elif ext.lower() in ['sql']:
         with open(path) as f:
             file = f.read()
+        for line in file.split('\n'): # Parse the data
+            l = line.strip() # Removing trailing spaces
+            l = l.format(**kwargs) # Formating
+            if remove_comments:
+                l = l.split('--')[0] # Remove comments
+                re.sub(r"<!--(.|\s|\n)*?-->", "", l.replace('/*', '<!--').replace('*/', '-->'))
+            if l != '':
+                data += [l]
+        data = ' '.join(data)
+    ## HTML
+    elif ext.lower() in ['html']:
+        with open(path) as f:
+            file = f.read()
+        # Parse the data
         for line in file.split('\n'):
             l = line.strip() # Removing trailing spaces
             l = l.format(**kwargs) # Formating
-            l = l.split('--')[0] # Remove comments
+            if remove_comments:
+                l = re.sub(r"<!--(.|\s|\n)*?-->", "", l) # Remove comments
             if l != '':
-                query += [l]
-        f_query = query
-        return re.sub(' +', ' ', ' '.join(f_query))
-    else:
+                data += [l]
+        data = ' '.join(data)
+    ## Python
+    elif ext.lower() in ['py']:
+        with open(path) as f:
+            file = f.read()
+        # Parse the data
+        for line in file.split('\n'):
+            l = line.strip() # Removing trailing spaces
+            l = l.format(**kwargs) # Formating
+            if remove_comments:
+                l = l.split('#')[0] # Remove comments
+            if l != '':
+                data += [l]
+        data = ' '.join(data)
+    ## Else, read-only
+    elif ext.lower() in ['readonly', 'read-only', 'ro']:
+        ret = False
         with open(path) as f:
             for line in f:
                 print(line.rstrip())
+    else:
+        ret = False
+
+    # If not read-only
+    if ret:
+        return data
 
 
 ##############################################################################################################################
@@ -269,17 +320,20 @@ def create_dataset(dataset, look_back=1):
 
 
 ### Put thousand separator
-def group(number):
+def group(number, digits=0):
     """Transforms a number into a string with a thousand separator.
 
     Args:
         number (float): Number to be transformed.
+        digits (int): Number of digits to round.
 
     Returns:
         str: Transformed number.
     """
     s = '%d' % number
     groups = []
+    if digits > 0:
+        str(number).split('.')[1][:digits]
     while s and s[-1].isdigit():
         groups.append(s[-3:])
         s = s[:-3]
