@@ -38,8 +38,16 @@ def file_age(file_path, format='seconds'):
     """
     """
     ttl_sec = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(file_path).st_mtime)).total_seconds()
-    if format.upper() in ['SEC', 'SECONDS']:
+    if format.lower() in ['s', 'sec', 'second', 'seconds']:
         return ttl_sec
+    elif format.lower() in ['m', 'min', 'minute', 'minutes']:
+        return ttl_sec/60
+    elif format.lower() in ['h', 'hr', 'hour', 'hour']:
+        return ttl_sec/3600
+    elif format.lower() in ['d', 'day', 'days']:
+        return ttl_sec/(24*60*60)
+    else:
+        raise ValueError(f"Format value is not correct. Can be 'seconds', 'minutes', 'hours' or 'days'. Got '{format}'.")
 
 
 ##############################################################################################################################

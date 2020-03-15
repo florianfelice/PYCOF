@@ -12,7 +12,7 @@ import argparse
 ## Define 
 library = 'PYCOF'
 desc = "A package for commonly used functions"
-requirements = ['pandas>=0.24.1', 'numpy>=1.16.3', 'psycopg2-binary>=2.7.4', 'pymysql>=0.9.3', 'tqdm>=4.35.0', 'boto3>=1.9.219', 'xlrd>=1.2.0']
+requirements = ['pandas>=0.24.1', 'numpy>=1.16.3', 'psycopg2-binary>=2.7.4', 'pymysql>=0.9.3', 'tqdm>=4.35.0', 'boto3>=1.9.219', 'xlrd>=1.2.0', 'statinf']
 
 
 

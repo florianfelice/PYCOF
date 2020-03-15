@@ -15,6 +15,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from statinf.ml.losses import mape
+from statinf.ml.losses import mean_squared_error as mse
+
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
 from .misc import write, file_age, verbose_display
@@ -78,7 +81,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
     # Set default value for table
     if (sql_type == 'SELECT'): # SELECT
         if (table == ""): # If the table is not specified, we get it from the SQL query
-            table = sql_query.replace('\n', ' ').split('FROM ')[1].split(' ')[0]
+            table = sql_query.upper().replace('\n', ' ').split('FROM ')[1].split(' ')[0]
         elif (sql_type == 'SELECT') & (table.upper() in sql_query.upper()):
             table = table
         else:
@@ -126,7 +129,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     It can remove comments, trailing spaces, breaklines and tabs. It can also replace f-strings with provided values.
 
     Example:
-        > read_sql('/path/to/file.sql', country='FR')
+        > f_read('/path/to/file.sql', country='FR')
 
     Args:
         path (str): path to the SQL file.
@@ -449,20 +452,21 @@ def str2bool(v):
 
 ##############################################################################################################################
 
-# WMAPE formula
-def wmape(y, yhat):
-    """Computes the Weighted Mean Absolute Percentage Error.
+# MAPE formula
+def mape(y_true, y_pred):
+    """Computes the Mean Absolute Percentage Error.
 
     Args:
         y (list): Real values on which to compare.
         yhat (list): Predicted values.
 
     Returns:
-        float: Weighted MAPE.
+        float: MAPE.
     """
-    y = np.array(y)
-    yhat = np.array(yhat)
-    mape = sum(np.abs(y-yhat))/sum(y)*100
+    y = np.array(y_true)
+    yhat = np.array(y_pred)
+    m = len(y)
+    mape = (100/m) * sum(np.abs(y-yhat))/sum(y)
     return mape
 
 
