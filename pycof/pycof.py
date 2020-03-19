@@ -276,29 +276,29 @@ def add_zero(nb):
 
 
 ## Adding One Hot Encoding
-def OneHotEncoding(df, colName, drop = True, verbose = False):
+def OneHotEncoding(dataset, column, drop=True, verbose=False):
     """Performs One Hot Encoding (OHE) usally used in Machine Learning.
 
     Args:
-        df (pandas.DataFrame): Data Frame on which we apply One Hot Encoding.
-        colName (list): Columns to be converted to dummy variables.
-        drop (bool): Keep the columns that need to be converted to dummies (defaults True).
+        dataset (pandas.DataFrame): Data Frame on which we apply One Hot Encoding.
+        column (list): Column to be converted to dummy variables.
+        drop (bool): Drop the column that needs to be converted to dummies (defaults True).
         verbose (bool): Display progression (defaults False).
 
     Returns:
         pandas.DataFrame: Transformed dataset with One Hot Encoding.
     """
-    all_values = df[colName].unique()
+    all_values = dataset[column].unique()
     
     for val in all_values:
         if verbose:
             print('Encoding for value: ' + str(val))
-        df[colName + '_' + str(val)] = 0
-        df[colName + '_' + str(val)][df[colName] == val] = 1
+        dataset[column + '_' + str(val)] = 0
+        dataset[column + '_' + str(val)][dataset[column] == val] = 1
     
     if drop:
-        df = df.drop(columns = [colName])
-    return(df)
+        dataset = dataset.drop(columns = [column])
+    return(dataset)
 
 
 ##############################################################################################################################
