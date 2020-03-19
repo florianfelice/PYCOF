@@ -133,7 +133,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
 
     Args:
         path (str): path to the SQL file.
-        extension (str): extension to use. Can be 'csv', 'xslsx', 'sql', 'html', 'py', 'read-only' (defaults None).
+        extension (str): extension to use. Can be 'csv', 'xslsx', 'sql', 'html', 'py', 'json', 'read-only' (defaults None).
         parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True).
         remove_comments (bool): Remove comments from the loaded file (defaults True).
         sep (str): Columns delimiter for pd.read_csv (defaults ',').
@@ -189,6 +189,10 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             if l != '':
                 data += [l]
         data = ' '.join(data)
+    ## Json
+    elif ext.lower() in ['json']:
+        with open(path) as json_file:
+            data = json.load(json_file)
     ## Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
         ret = False
