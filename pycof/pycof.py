@@ -1,12 +1,15 @@
 import os
 import sys
 import getpass
-import json
+
+import re
 
 import pandas as pd
 import numpy as np
-import re
+import json
 import xlrd
+import fastparquet as fp
+import pyarrow.parquet as pq
 
 from tqdm import tqdm
 import datetime
@@ -122,7 +125,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
 ##############################################################################################################################
 
-def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, **kwargs):
+def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', **kwargs):
     """Read and parse a data file.
     It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
     The function will by default detect the extension from the file path. You can force an extension with the argument.
@@ -133,19 +136,19 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
 
     Args:
         path (str): path to the SQL file.
-        extension (str): extension to use. Can be 'csv', 'xslsx', 'sql', 'html', 'py', 'json', 'read-only' (defaults None).
+        extension (str): extension to use. Can be 'csv', 'txt', 'xslsx', 'sql', 'html', 'py', 'json', 'parquet', 'read-only' (defaults None).
         parse (bool): Format the query to remove trailing space and comments, ready to use format (defaults True).
         remove_comments (bool): Remove comments from the loaded file (defaults True).
+        sheet_name (str): Tab column to load when reading Excel files (defaults 0).
+        engine (str): Engine to use to load the file. Can be 'pyarrow' or 'fastparquet' for parquet or 'json' of 'pandas' for json (defaults 'pyarrow')
         sep (str): Columns delimiter for pd.read_csv (defaults ',').
-
-
     """
     ext = path.split('.')[-1] if extension is None else extension
     data = []
     ret = True # Need to return a value?
     
-    ## CSV
-    if ext.lower() in ['csv']:
+    ## CSV / txt
+    if ext.lower() in ['csv', 'txt']:
         data = pd.read_csv(path, sep=sep, **kwargs)
     ## XLSX
     elif ext.lower() in ['xls', 'xlsx']:
@@ -191,8 +194,17 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = ' '.join(data)
     ## Json
     elif ext.lower() in ['json']:
-        with open(path) as json_file:
-            data = json.load(json_file)
+        if engine.lower() in ['json']:
+            with open(path) as json_file:
+                data = json.load(json_file)
+        else:
+            data = pd.read_json(path, **kwargs)
+    ## Parquet
+    elif ext.lower() in ['parq', 'parquet']:
+        if engine.lower() in ['fast', 'fp', 'fastparquet']:
+            data = fp.ParquetFile(path, **kwargs).to_pandas()
+        else:
+            data = pq.read_table(path, **kwargs).to_pandas()
     ## Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
         ret = False

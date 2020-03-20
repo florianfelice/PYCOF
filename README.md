@@ -24,7 +24,7 @@ The current version of the library provides:
 * [**`verbose_display`**](https://www.florianfelice.com/pycof/format#verbose_display):
 extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
 * [**`remote_execute_sql`**](https://www.florianfelice.com/pycof/sql#remote_execute_sql): aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.
-* [**`read_sql`**](https://www.florianfelice.com/pycof/data#f_read): read and format an SQL query file.
+* [**`f_read`**](https://www.florianfelice.com/pycof/data#f_read): Load any data file, regarless of the format.
 * [**`send_email`**](https://www.florianfelice.com/pycof/format#send_email): simple function to send email to contacts in a concise way.
 * [**`add_zero`**](https://www.florianfelice.com/pycof/format#add_zero): simple function to convert `int` to `str` by adding a 0 is less than 10.
 * [**`OneHotEncoding`**](https://www.florianfelice.com/pycof/models#OneHotEncoding): performs [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
