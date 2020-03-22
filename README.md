@@ -1,6 +1,8 @@
 # PYCOF (PYthon COmmon Functions)
 
 ## 1. Installation
+[![Downloads](https://pepy.tech/badge/pycof)](https://pepy.tech/project/pycof)
+[![PyPI version](https://badge.fury.io/py/pycof.svg)](https://pypi.org/project/pycof/)
 
 You can get pycof from [PyPI](https://pypi.org/project/pycof/) with:
 
@@ -21,6 +23,7 @@ It will redirect you the the function's specific documentation.
 
 The current version of the library provides:
 
+* [**`BinaryPerformance`**](https://www.florianfelice.com/pycof/mdoels#BinaryPerformance): Gives detailed performance of a binary classification model (accuracy, confusion matrix, precision/recall, F1-score).
 * [**`verbose_display`**](https://www.florianfelice.com/pycof/format#verbose_display):
 extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
 * [**`remote_execute_sql`**](https://www.florianfelice.com/pycof/sql#remote_execute_sql): aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.

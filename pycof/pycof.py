@@ -20,6 +20,7 @@ from email.mime.multipart import MIMEMultipart
 
 from statinf.ml.losses import mape
 from statinf.ml.losses import mean_squared_error as mse
+from statinf.ml.performance import BinaryPerformance
 
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
@@ -468,43 +469,3 @@ def str2bool(v):
 
 ##############################################################################################################################
 
-# MAPE formula
-def mape(y_true, y_pred):
-    """Computes the Mean Absolute Percentage Error.
-
-    Args:
-        y (list): Real values on which to compare.
-        yhat (list): Predicted values.
-
-    Returns:
-        float: MAPE.
-    """
-    y = np.array(y_true)
-    yhat = np.array(y_pred)
-    m = len(y)
-    mape = (100/m) * sum(np.abs(y-yhat))/sum(y)
-    return mape
-
-
-
-##############################################################################################################################
-
-# MSE formula
-def mse(y_estimated, y_actual, root=False):
-    """Computes the Mean Squared Error
-
-    Args:
-        y_estimated (list): Real values on which to compare.
-        y_actuams (list): Predicted values.
-        root (bool): Return Root Mean Squared Error (RMSE) or simple MSE.
-
-    Returns:
-        float: MSE or RMSE.
-    """
-    y_estimates = np.array(y_estimates)
-    y_actuals = np.array(y_actuals)
-    if root:
-        output = ((sum((y_estimates - y_actuals))**2)/len(y_estimates))**(1/2)
-    else:
-        output = (sum((y_estimates - y_actuals))**2)/len(y_estimates)
-    return output
