@@ -18,9 +18,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from statinf.ml.losses import mape
-from statinf.ml.losses import mean_squared_error as mse
-from statinf.ml.performance import BinaryPerformance
+# from statinf.ml.losses import mape
+# from statinf.ml.losses import mean_squared_error as mse
+# from statinf.ml.performance import BinaryPerformance
 
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
