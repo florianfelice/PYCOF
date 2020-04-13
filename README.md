@@ -23,22 +23,21 @@ It will redirect you the the function's specific documentation.
 
 The current version of the library provides:
 
-* [**`BinaryPerformance`**](https://www.florianfelice.com/pycof/mdoels#BinaryPerformance): Gives detailed performance of a binary classification model (accuracy, confusion matrix, precision/recall, F1-score).
-* [**`verbose_display`**](https://www.florianfelice.com/pycof/format#verbose_display):
+* [**`verbose_display`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.verbose_display):
 extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
-* [**`remote_execute_sql`**](https://www.florianfelice.com/pycof/sql#remote_execute_sql): aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.
-* [**`f_read`**](https://www.florianfelice.com/pycof/data#f_read): Load any data file, regarless of the format.
-* [**`send_email`**](https://www.florianfelice.com/pycof/format#send_email): simple function to send email to contacts in a concise way.
-* [**`add_zero`**](https://www.florianfelice.com/pycof/format#add_zero): simple function to convert `int` to `str` by adding a 0 is less than 10.
-* [**`OneHotEncoding`**](https://www.florianfelice.com/pycof/models#OneHotEncoding): performs [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
-* [**`create_dataset`**](https://www.florianfelice.com/pycof/models#create_dataset): function to format a [Pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
-* [**`group`**](https://www.florianfelice.com/pycof/format#group): will convert an `int` to a `str` with thousand seperator.
-* [**`replace_zero`**](https://www.florianfelice.com/pycof/format#replace_zero): will transform 0 values to `-` for display purposes.
-* [**`week_sunday`**](https://www.florianfelice.com/pycof/format#week_sunday): will return week number of last sunday date of a given date.
-* [**`display_name`**](https://www.florianfelice.com/pycof/format#display_name): displays the current user name. Will display either `first`, `last` or `full` name.
-* [**`write`**](https://www.florianfelice.com/pycof/data#write): writes a `str` to a specific file (usually .txt) in one line of code.
-* [**`file_age`**](https://www.florianfelice.com/pycof/format#file_age): computes the age (in days, hours, ...) of a given local file.
-* [**`str2bool`**](https://www.florianfelice.com/pycof/format#str2bool): converts string to boolean.
+* [**`remote_execute_sql`**](https://www.florianfelice.com/pycof/sql/sql.html#module-pycof.remote_execute_sql): aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.
+* [**`f_read`**](https://www.florianfelice.com/pycof/datamngt/datamngt.html#module-pycof.f_read): Load any data file, regarless of the format.
+* [**`send_email`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.send_email): simple function to send email to contacts in a concise way.
+* [**`add_zero`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.add_zero): simple function to convert `int` to `str` by adding a 0 is less than 10.
+* [**`OneHotEncoding`**](https://www.florianfelice.com/pycof/model/model.html#module-pycof.OneHotEncoding): performs [One Hot Encoding](https://en.wikipedia.org/wiki/One-hot) on a dataframe for the provided column names. Will keep the original categorical variables if `drop` is set to `False`.
+* [**`create_dataset`**](https://www.florianfelice.com/pycof/model/model.html#module-pycof.create_dataset): function to format a [Pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html) dataframe for [keras](https://keras.io/) format for LSTM.
+* [**`group`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.group): will convert an `int` to a `str` with thousand seperator.
+* [**`replace_zero`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.replace_zero): will transform 0 values to `-` for display purposes.
+* [**`week_sunday`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.week_sunday): will return week number of last sunday date of a given date.
+* [**`display_name`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.display_name): displays the current user name. Will display either `first`, `last` or `full` name.
+* [**`write`**](https://www.florianfelice.com/pycof/datamngt/datamngt.html#module-pycof.write): writes a `str` to a specific file (usually .txt) in one line of code.
+* [**`file_age`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.file_age): computes the age (in days, hours, ...) of a given local file.
+* [**`str2bool`**](https://www.florianfelice.com/pycof/format/format.html#module-pycof.str2bool): converts string to boolean.
 
 
 

@@ -148,7 +148,7 @@ def _get_credentials(config, useIAM=False):
             user     = cluster_creds['DbUser']
             password = cluster_creds['DbPassword']
         except:
-            raise ValueError('Cannot connect to AWS API, please check your config file')
+            raise ValueError('Could not retreive cluster information. Please check your config file, region or user permissions.')
     #
     return hostname, port, user, password, database
 
