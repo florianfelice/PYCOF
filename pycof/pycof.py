@@ -6,9 +6,9 @@ import re
 
 import pandas as pd
 import numpy as np
+import math
 import json
 import xlrd
-import fastparquet as fp
 import pyarrow.parquet as pq
 
 from tqdm import tqdm
@@ -234,6 +234,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     ## Parquet
     elif ext.lower() in ['parq', 'parquet']:
         if engine.lower() in ['fast', 'fp', 'fastparquet']:
+            import fastparquet as fp
             data = fp.ParquetFile(path, **kwargs).to_pandas()
         else:
             data = pq.read_table(path, **kwargs).to_pandas()
