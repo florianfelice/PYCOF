@@ -34,7 +34,6 @@ from .misc import write, file_age, verbose_display
 
 ##############################################################################################################################
 
-
 ## Publish or read from DB
 def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
     """Simplified function for executing SQL queries. Will look at the credentials at :obj:`/etc/config.json`. User can also pass a dictionnary for credentials.
@@ -130,9 +129,9 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
     conn.close()
 
 
-
 ##############################################################################################################################
 
+## Easy file read
 def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', **kwargs):
     """Read and parse a data file.
     It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
@@ -149,7 +148,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         * **parse** (:obj:`bool`): Format the query to remove trailing space and comments, ready to use format (defaults True).
         * **remove_comments** (:obj:`bool`): Remove comments from the loaded file (defaults True).
         * **sheet_name** (:obj:`str`): Tab column to load when reading Excel files (defaults 0).
-        * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or 'fastparquet' for parquet or 'json' of 'pandas' for json (defaults 'pyarrow')
+        * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or the function from your preferred library (defaults 'pyarrow').
         * **sep** (:obj:`str`): Columns delimiter for pd.read_csv (defaults ',').
 
     :Example:
@@ -161,7 +160,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     """
     ext = path.split('.')[-1] if extension is None else extension
     data = []
-    ret = True  # Need to return a value?
+    
     ## CSV / txt
     if ext.lower() in ['csv', 'txt']:
         data = pd.read_csv(path, sep=sep, **kwargs)
@@ -233,14 +232,15 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = pd.read_json(path, **kwargs)
     ## Parquet
     elif ext.lower() in ['parq', 'parquet']:
-        if engine.lower() in ['fast', 'fp', 'fastparquet']:
-            import fastparquet as fp
-            data = fp.ParquetFile(path, **kwargs).to_pandas()
+        if type(engine) == str:
+            if engine.lower() in ['py', 'pa', 'pyarrow']:
+                data = pq.read_table(path, **kwargs).to_pandas()
+            else:
+                raise ValueError('Engine value not allowed')
         else:
-            data = pq.read_table(path, **kwargs).to_pandas()
+            data = engine(path, **kwargs)
     ## Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
-        ret = False
         with open(path) as f:
             for line in f:
                 print(line.rstrip())
@@ -302,9 +302,7 @@ def send_email(to, subject, body, cc='', credentials={}):
     server.quit()
 
 
-
 #############################################################################################################################
-
 
 ## Add zero to int less than 10 and return a string
 def add_zero(nb):
@@ -329,8 +327,8 @@ def add_zero(nb):
     else:
         return(str(nb))
 
-##############################################################################################################################
 
+##############################################################################################################################
 
 ## Adding One Hot Encoding
 def OneHotEncoding(dataset, column, drop=True, verbose=False):
@@ -389,7 +387,6 @@ def OneHotEncoding(dataset, column, drop=True, verbose=False):
 
 ##############################################################################################################################
 
-
 ## convert an array of values into a dataset matrix: used for LSTM data pre-processing
 def create_dataset(dataset, look_back=1):
     """Function to convert a DataFrame to array format readable for keras LSTM.
@@ -419,7 +416,6 @@ def create_dataset(dataset, look_back=1):
 
 ##############################################################################################################################
 
-
 ### Put thousand separator
 def group(nb, digits=0):
     """Transforms a number into a string with a thousand separator.
@@ -441,10 +437,10 @@ def group(nb, digits=0):
     :Returns:
         * :obj:`str`: Transformed number.
     """
-    s = '%d' % number
+    s = '%d' % nb
     groups = []
     if digits > 0:
-        dig = '.' + str(number).split('.')[1][:digits]
+        dig = '.' + str(nb).split('.')[1][:digits]
     else:
         dig = ''
     while s and s[-1].isdigit():
@@ -454,7 +450,6 @@ def group(nb, digits=0):
 
 
 ##############################################################################################################################
-
 
 ### Transform 0 to '-'
 def replace_zero(nb, digits=0):
@@ -484,9 +479,7 @@ def replace_zero(nb, digits=0):
         return(group(nb/1000, digits))
 
 
-
 ##############################################################################################################################
-
 
 ### Get the week (sunday) date
 def week_sunday(date, return_week_nb=False):
@@ -521,9 +514,7 @@ def week_sunday(date, return_week_nb=False):
         return(last_sunday)
 
 
-
 ##############################################################################################################################
-
 
 ### Get use name (not only login)
 def display_name(display='first'):
