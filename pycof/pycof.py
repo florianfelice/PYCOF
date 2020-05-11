@@ -78,29 +78,32 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         sql_type = 'INSERT'
     elif ("UNLOAD" in sql_query.upper()):
         sql_type = 'UNLOAD'
+    elif ("COPY" in sql_query.upper()):
+        sql_type = 'COPY'
     else:
         allowed_queries = f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
         # Check if the query_type value is correct
-        assert sql_type.upper() in all_query_types, allowed_queries
+        raise ValueError(allowed_queries + f'. Got {query_type}')
+        # assert query_type.upper() in all_query_types, allowed_queries
 
     # ============================================================================================
     # Credentials load
     hostname, port, user, password, database = _get_credentials(_get_config(credentials), useIAM)
-    
+
     # ============================================================================================
     # Set default value for table
-    if (sql_type == 'SELECT'): # SELECT
-        if (table == ""): # If the table is not specified, we get it from the SQL query
+    if (sql_type == 'SELECT'):  # SELECT
+        if (table == ""):  # If the table is not specified, we get it from the SQL query
             table = sql_query.upper().replace('\n', ' ').split('FROM ')[1].split(' ')[0]
         elif (sql_type == 'SELECT') & (table.upper() in sql_query.upper()):
             table = table
         else:
             raise SyntaxError('Argument table does not match with SQL statement')
-    
+
     # ============================================================================================
     # Database connector
     conn, cur = _define_connector(hostname, port, user, password, database)
-    
+
     # ========================================================================================
     # SELECT - Read query
     if sql_type.upper() == "SELECT":
@@ -124,7 +127,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
             raise ValueError('Table does not match with SQL query')
     else:
         raise ValueError(f'Unknown query_type, should be as: {all_query_types}')
-    
+
     # Close SQL connection
     conn.close()
 

@@ -45,11 +45,11 @@ The file follows the below structure:
    "DB_HOST": "",
    "DB_PORT": "3306",
    "DB_DATABASE": "",
-   "__COMMENT_1__": "Email specific, send_email"
+   "__COMMENT_1__": "Email specific, send_email",
    "EMAIL_USER": "",
    "EMAIL_PASSWORD": "",
    "EMAIL_SMTP": "smtp.gmail.com",
-   "EMAIL_PORT": "587"
+   "EMAIL_PORT": "587",
    "__COMMENT_2__": "IAM specific, if useIAM=True in remote_execute_sql",
    "CLUSTER_NAME": "",
    "AWS_ACCESS_KEY_ID": "",
