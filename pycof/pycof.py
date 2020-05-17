@@ -1,6 +1,7 @@
 import os
 import sys
 import getpass
+import warnings
 
 import re
 
@@ -18,24 +19,20 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# from statinf.ml.losses import mape
-# from statinf.ml.losses import mean_squared_error as mse
-# from statinf.ml.performance import BinaryPerformance
-
 from .sqlhelper import _get_config, _get_credentials, _define_connector
 from .sqlhelper import _insert_data, _cache
 from .misc import write, file_age, verbose_display
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-## TODO: Test send_email by list of recipients
-## TODO: remote_execute_sql with dump to S3 or to S3 and Redshift.
+# TODO: Test send_email by list of recipients
+# TODO: remote_execute_sql with dump to S3 or to S3 and Redshift.
 
-##############################################################################################################################
+#######################################################################################################################
 
-## Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time=24*60*60, cache_name=None):
+# Publish or read from DB
+def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_time='24h', cache_name=None):
     """Simplified function for executing SQL queries. Will look at the credentials at :obj:`/etc/config.json`. User can also pass a dictionnary for credentials.
 
     .. code-block:: python
@@ -52,7 +49,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         * **autofill_nan** (:obj:`bool`): Replace NaN values by 'NULL' (defaults True).
         * **useIAM** (:obj:`bool`): Get AWS IAM credentials using access and secret key (defaults False).
         * **cache** (:obj:`bool`): Caches the data to avoid running again the same SQL query (defaults False).
-        * **cache_time** (:obj:`int`): How long to keep the caching data without reloading (defaults 1 day).
+        * **cache_time** (:obj:`str`): How long to keep the caching data without reloading, format can either be :obj:`str` with units of :obj:`int` in seconds (defaults 1 day).
         * **cache_name** (:obj:`str`): File name for storing cache data, if None will use WHERE clause from SQL (defaults None).
 
     :Example:
@@ -73,6 +70,10 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         # If a query is inserted, use select.
         # For DELETE or COPY, user needs to provide the query_type
         sql_type = "SELECT"
+        # Can read an external file is path is given as sql_query
+        if '.sql' in sql_query.lower():
+            sql_query = f_read(sql_query, extension='sql')
+            assert sql_query != '', 'Could not read your SQL file properly. Please make sure your file is saved or check your path.'
     elif (data != {}) or (type(sql_query) == pd.DataFrame):
         # If data is provided, use INSERT sql_type
         sql_type = 'INSERT'
@@ -132,9 +133,9 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
     conn.close()
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-## Easy file read
+# Easy file read
 def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', **kwargs):
     """Read and parse a data file.
     It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
@@ -163,14 +164,14 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     """
     ext = path.split('.')[-1] if extension is None else extension
     data = []
-    
-    ## CSV / txt
+
+    # CSV / txt
     if ext.lower() in ['csv', 'txt']:
         data = pd.read_csv(path, sep=sep, **kwargs)
-    ## XLSX
+    # XLSX
     elif ext.lower() in ['xls', 'xlsx']:
         data = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
-    ## SQL
+    # SQL
     elif ext.lower() in ['sql']:
         with open(path) as f:
             file = f.read()
@@ -184,7 +185,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             if l_striped != '':
                 data += [l_striped]
         data = ' '.join(data)
-    ## HTML
+    # HTML
     elif ext.lower() in ['html']:
         with open(path) as f:
             file = f.read()
@@ -198,7 +199,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             if l_striped != '':
                 data += [l_striped]
         data = ' '.join(data)
-    ## Python
+    # Python
     elif ext.lower() in ['py', 'sh']:
         with open(path) as f:
             file = f.read()
@@ -212,7 +213,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             if l_striped != '':
                 data += [l_striped]
         data = ' '.join(data)
-    ## JavaScript
+    # JavaScript
     elif ext.lower() in ['js']:
         with open(path) as f:
             file = f.read()
@@ -226,14 +227,14 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             if l_striped != '':
                 data += [l_striped]
         data = ' '.join(data)
-    ## Json
+    # Json
     elif ext.lower() in ['json']:
         if engine.lower() in ['json']:
             with open(path) as json_file:
                 data = json.load(json_file)
         else:
             data = pd.read_json(path, **kwargs)
-    ## Parquet
+    # Parquet
     elif ext.lower() in ['parq', 'parquet']:
         if type(engine) == str:
             if engine.lower() in ['py', 'pa', 'pyarrow']:
@@ -242,7 +243,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
                 raise ValueError('Engine value not allowed')
         else:
             data = engine(path, **kwargs)
-    ## Else, read-only
+    # Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
         with open(path) as f:
             for line in f:
@@ -255,9 +256,9 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     return data
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-## Send an Email
+# Send an Email
 def send_email(to, subject, body, cc='', credentials={}):
     """Simplified function to send emails.
     Will look at the credentials at :obj:`/etc/config.json`. User can also pass a dictionnary for credentials.
@@ -265,7 +266,7 @@ def send_email(to, subject, body, cc='', credentials={}):
     .. code-block:: python
 
         pycof.send_email(to, subject, body, cc='', credentials={})
-    
+
     :Parameters:
         * **to** (:obj:`str`): Recipient of the email.
         * **subject** (:obj:`str`): Subject of the email.
@@ -273,7 +274,7 @@ def send_email(to, subject, body, cc='', credentials={}):
         * **cc** (:obj:`str`): Email address to be copied (defaults None).
         * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from :obj:`/etc/` (defaults {}).
         * **verbose** (:obj:`bool`): Displays if the email was sent successfully (defaults False).
-    
+
     :Example:
         >>> content = "This is a test"
         >>> pycof.send_email(to="test@domain.com", body=content, subject="Hello world!")
@@ -293,8 +294,8 @@ def send_email(to, subject, body, cc='', credentials={}):
     # Server login
     try:
         port = int(config.get('EMAIL_PORT'))
-    except:
-        port = '587' # Default Google port number
+    except Exception:
+        port = '587'  # Default Google port number
     connection = config.get('EMAIL_SMTP') + ':' + port
     server = smtplib.SMTP(connection)
     server.starttls()
@@ -305,9 +306,9 @@ def send_email(to, subject, body, cc='', credentials={}):
     server.quit()
 
 
-#############################################################################################################################
+#######################################################################################################################
 
-## Add zero to int less than 10 and return a string
+# Add zero to int less than 10 and return a string
 def add_zero(nb):
     """Converts a number to a string and adds a '0' if less than 10.
 
@@ -317,7 +318,7 @@ def add_zero(nb):
 
     :Parameters:
         * **nb** (:obj:`float`): Number to be converted to a string.
-    
+
     :Example:
         >>> pycof.add_zero(2)
         ... '02'
@@ -331,9 +332,9 @@ def add_zero(nb):
         return(str(nb))
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-## Adding One Hot Encoding
+# Adding One Hot Encoding
 def OneHotEncoding(dataset, column, drop=True, verbose=False):
     """Performs One Hot Encoding (OHE) usally used in Machine Learning.
 
@@ -346,7 +347,7 @@ def OneHotEncoding(dataset, column, drop=True, verbose=False):
         * **column** (:obj:`list`): Column to be converted to dummy variables.
         * **drop** (:obj:`bool`): Drop the column that needs to be converted to dummies (defaults True).
         * **verbose** (:obj:`bool`): Display progression (defaults False).
-    
+
     :Example:
         >>> print(df)
         ... +----+--------+----------+-----+
@@ -375,33 +376,39 @@ def OneHotEncoding(dataset, column, drop=True, verbose=False):
     :Returns:
         :obj:`pandas.DataFrame`: Transformed dataset with One Hot Encoding.
     """
+
+    deprec_msg = """Deprecation!
+    This function is being migrated to STATINF and will soon be removed from PYCOF.
+    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.OneHotEncoding
+    """
+    warnings.warn(deprec_msg, Warning)
     all_values = dataset[column].unique()
-    
+
     for val in all_values:
         if verbose:
             print('Encoding for value: ' + str(val))
         dataset[column + '_' + str(val)] = 0
         dataset[column + '_' + str(val)][dataset[column] == val] = 1
-    
+
     if drop:
-        dataset = dataset.drop(columns = [column])
+        dataset = dataset.drop(columns=[column])
     return(dataset)
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-## convert an array of values into a dataset matrix: used for LSTM data pre-processing
+# convert an array of values into a dataset matrix: used for LSTM data pre-processing
 def create_dataset(dataset, look_back=1):
     """Function to convert a DataFrame to array format readable for keras LSTM.
 
     .. code-block:: python
 
         pycof.create_dataset(dataset, look_back=1)
-    
+
     :Parameters:
         * **dataset** (:obj:`pandas.DataFrame`): DataFrame on which to aply the transformation.
         * **look_back** (:obj:`int`): Number of periods in the past to consider (defaults 1).
-    
+
     :Example:
         >>> pc.create_dataset(df)
 
@@ -409,17 +416,24 @@ def create_dataset(dataset, look_back=1):
         * :obj:`numpy.array`: Features X converted for keras LSTM.
         * :obj:`numpy.array`: Dependent variable Y converted for keras LSTM.
     """
+
+    deprec_msg = """Deprecation!
+    This function is being migrated to STATINF and will soon be removed from PYCOF.
+    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.create_dataset
+    """
+    warnings.warn(deprec_msg, Warning)
+
     dataX, dataY = [], []
-    for i in range(len(dataset)-look_back-1):
-        a = dataset[i:(i+look_back), 0]
+    for i in range(len(dataset) - look_back - 1):
+        a = dataset[i:(i + look_back), 0]
         dataX.append(a)
         dataY.append(dataset[i + look_back, 0])
     return np.array(dataX), np.array(dataY)
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-### Put thousand separator
+# Put thousand separator
 def group(nb, digits=0):
     """Transforms a number into a string with a thousand separator.
 
@@ -430,7 +444,7 @@ def group(nb, digits=0):
     :Parameters:
         * **nb** (:obj:`float`): Number to be transformed.
         * **digits** (:obj:`int`): Number of digits to round.
-    
+
     :Example:
         >>> pycof.group(12345)
         ... '12,345'
@@ -452,9 +466,9 @@ def group(nb, digits=0):
     return s + ','.join(reversed(groups)) + dig
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-### Transform 0 to '-'
+# Transform 0 to '-'
 def replace_zero(nb, digits=0):
     """For a given number, will transform 0 by '-' for display puspose.
 
@@ -479,12 +493,12 @@ def replace_zero(nb, digits=0):
     if (str(nb) == '0'):
         return '-'
     else:
-        return(group(nb/1000, digits))
+        return(group(nb / 1000, digits))
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-### Get the week (sunday) date
+# Get the week (sunday) date
 def week_sunday(date, return_week_nb=False):
     """For a given date, will return the date from previous sunday or week number.
 
@@ -506,7 +520,7 @@ def week_sunday(date, return_week_nb=False):
         * :obj:`int`: Week number (from 1 to 52) if :obj:`return_week_nb` else date format.
     """
     # Get when was the last sunday
-    idx = (date.weekday() + 1) % 7 # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
+    idx = (date.weekday() + 1) % 7  # MON = 0, SUN = 6 -> SUN = 0 .. SAT = 6
     # Get the date
     last_sunday = date - datetime.timedelta(idx)
     if return_week_nb:
@@ -517,19 +531,19 @@ def week_sunday(date, return_week_nb=False):
         return(last_sunday)
 
 
-##############################################################################################################################
+#######################################################################################################################
 
-### Get use name (not only login)
+# Get use name (not only login)
 def display_name(display='first'):
     """Displays current user name (either first/last or full name)
 
     .. code-block:: python
 
         display_name(display='first')
-    
+
     :Parameters:
         * **display** (:obj:`str`): What name to display 'first', 'last' or 'full' (defaults 'first').
-    
+
     :Example:
         >>> pycof.display_name()
         ... 'Florian'
@@ -564,11 +578,11 @@ def display_name(display='first'):
                 return (user.split(', ')[0])
             else:
                 return (user)
-    except:
+    except Exception:
         return(getpass.getuser())
 
 
-##############################################################################################################################
+#######################################################################################################################
 
 # Convert a string to boolean
 def str2bool(value):
@@ -580,7 +594,7 @@ def str2bool(value):
 
     :Parameters:
         * **value** (:obj:`str`): Value to be converted to boolean.
-    
+
     :Example:
         >>> pycof.str2bool('true')
         ... True
@@ -595,5 +609,4 @@ def str2bool(value):
     return str(value).lower() in ("yes", "y", "true", "t", "1")
 
 
-##############################################################################################################################
-
+#######################################################################################################################

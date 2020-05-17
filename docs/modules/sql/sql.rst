@@ -22,7 +22,7 @@ Credentials
 Save your credentials locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions :obj:`remote_execute_sql` and :obj:`send_email` will by default look for the credentials located in :obj:`/etc/config.json`.
+The functions :py:meth:`pycof.remote_execute_sql` and :func:`~send_email` will by default look for the credentials located in :obj:`/etc/config.json`.
 On Windows, save the config file as :obj:`C:/Windows/config.json`.
 
 The file follows the below structure:
@@ -99,8 +99,8 @@ You can also cache your data by using the cache argument:
 
 .. code-block:: python
 
-    ## Cache the results of the query for 1h (60*60 = 3600 seconds)
-    df = pc.remote_execute_sql(sql, cache=True, cache_time=3600)
+    ## Cache the results of the query for 30 minutes
+    df = pc.remote_execute_sql(sql, cache=True, cache_time='30mins')
 
 The cache argument will allow you to save time the next time you execute the same SQL query within the :obj:`cache_time` period.
 It will then load the cached data and not execute the whole SQL query. The default value is 1 day.
@@ -109,7 +109,7 @@ It will then load the cached data and not execute the whole SQL query. The defau
 Query with AWS IAM credentials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The function :obj:`remote_execute_sql` can take into account `IAM <https://aws.amazon.com/iam/features/manage-users/>`_ user's credentials.
+The function :py:meth:`pycof.remote_execute_sql` can take into account `IAM <https://aws.amazon.com/iam/features/manage-users/>`_ user's credentials.
 You need to ensure that your credentials file :obj:`/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
 The only argument to change when calling the function is to set :obj:`useIAM=True`.
 
@@ -140,7 +140,7 @@ FAQ
 What if I change an argument in the SQL query and run with :obj:`cache=True`?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The function :obj:`remote_execute_sql` looks at your SQL query as a whole when saving/loading the cache data.
+The function :py:meth:`pycof.remote_execute_sql` looks at your SQL query as a whole when saving/loading the cache data.
 Even a slight change in the query (column name, filter, etc...) will trigger a new run of the new query before being cached again.
 You can then safely use caching without worrying about the eventual evolution of your SQL.
 
@@ -151,7 +151,7 @@ How to use different credential sets?
 The credentials argument can take the path or json file name into account to load them.
 
 For instance, you can have multiple credential files such as :obj:`/etc/config.json`, :obj:`/etc/MyNewHost.json` and :obj:`/home/OtherHost.json`.
-In :obj:`remote_execute_sql` you can play with the credentials argument.
+In :py:meth:`pycof.remote_execute_sql` you can play with the credentials argument.
 
     * To use the :obj:`/etc/config.json` credentials you can use the default arguments by not providing anything.
     * To use :obj:`/etc/MyNewHost.json` you can either pass :obj:`credentials='MyNewHost.json'` or the whole path to use them.
