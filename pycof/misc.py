@@ -15,10 +15,6 @@ import datetime
 def write(text, file, perm='a', verbose=False, end_row='\n'):
     """Write a line of text into a file (usually .txt).
 
-    .. code-block:: python
-
-        pycof.write(text, file, perm='a', verbose=False, end_row='\\n')
-
     :Parameters:
         * **text** (:obj:`str`): Line of text to be inserted in the file.
         * **file** (:obj:`str`): File on which to write (/path/to/file.txt). Can be any format, not necessarily txt.
@@ -42,49 +38,43 @@ def write(text, file, perm='a', verbose=False, end_row='\n'):
 
 # Compute the age of a given file
 def file_age(file_path, format='seconds'):
-    """Computes the age of a file. 
+    """Computes the age of a file.
 
-    .. code-block:: python
-
-        pycof.file_age(file_path, format='seconds')
-    
     :Parameters:
         * **file_path** (:obj:`str`): Path of the file to compute the age.
         * **format** (:obj:`str`): Unit in which to compute the age (defaults 'seconds'). Can either be 'seconds', 'minutes', 'hours' or 'days'.
-    
+
     :Example:
         >>> pycof.file_age('/home/ubuntu/.bashrc')
         ... 9937522.32319
         >>> pycof.file_age('/home/ubuntu/.bashrc', format='days')
         ... 11.01812981440972
-    
+
     :Returns:
         * :obj:`int`: Age of the file.
     """
-    ttl_sec = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.stat(file_path).st_mtime)).total_seconds()
+    ttl_sec = (datetime.datetime.now() - datetime.datetime.fromtimestamp(os.stat(file_path).st_mtime)).total_seconds()
     if format.lower() in ['s', 'sec', 'second', 'seconds']:
         return ttl_sec
     elif format.lower() in ['m', 'min', 'minute', 'minutes']:
         return ttl_sec/60
-    elif format.lower() in ['h', 'hr', 'hour', 'hour']:
+    elif format.lower() in ['h', 'hr', 'hour', 'hours']:
         return ttl_sec/3600
     elif format.lower() in ['d', 'day', 'days']:
         return ttl_sec/(24*60*60)
+    elif format.lower() in ['w', 'wk', 'wks', 'week', 'weeks']:
+        return ttl_sec/(7*24*60*60)
     else:
-        raise ValueError(f"Format value is not correct. Can be 'seconds', 'minutes', 'hours' or 'days'. Got '{format}'.")
+        raise ValueError(f"Format value is not correct. Can be 'seconds', 'minutes', 'hours', 'days' or 'weeks'. Got '{format}'.")
 
 
 ##############################################################################################################################
 
-## Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
+# Display tqdm only if argument for verbosity is 1 (works for lists, range and str)
 
 def verbose_display(element, verbose=True, sep=' ', end='\n', return_list=False):
     """Extended print function with tqdm display for loops.
     Also has argument verbose for automated scripts with overall verbisity argument.
-
-    .. code-block:: python
-
-        pycof.verbose_display(element, verbose=True, sep=' ', end='\\n', return_list=False)
 
     :Parameters:
         * **element** (:obj:`str`): The element to be displayed. Can either be str, range, list.
@@ -111,4 +101,3 @@ def verbose_display(element, verbose=True, sep=' ', end='\n', return_list=False)
         disp = 0 # we don't display anything
     else:
         return(element)
-

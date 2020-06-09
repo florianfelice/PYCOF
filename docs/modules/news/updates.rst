@@ -28,7 +28,6 @@ The path will then be passed to :py:meth:`pycof.f_read` to recover the SQL query
 
 .. warning::
     The module :obj:`datamngt` which contains :func:`~OneHotEncoding` and :func:`~create_dataset` will be moved to `statinf`_.
-    It is still
 
 
 

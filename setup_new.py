@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycof",
-    version="1.1.33",
+    version="1.1.34",
     author="Florian Felice",
     author_email="florian.felice@outlook.com",
     description="A package for commonly used functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/florianfelice/pycof",
+    url="https://www.florianfelice.com/pycof",
     packages=setuptools.find_packages(),
     install_requires=[
           "pandas>=0.24.1",

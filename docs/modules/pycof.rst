@@ -32,7 +32,7 @@ The library is supported on Windows, Linux and MacOS.
 Setup
 =====
 
-The functions :py:meth:`pycof.remote_execute_sql` and :py:meth:`pycof.send_email` will by default look for the credentials located in :obj:`/etc/config.json`.
+The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will, by default, look for the credentials located in :obj:`/etc/config.json`.
 On Windows, save the config file as :obj:`C:/Windows/config.json`.
 
 The file follows the below structure:

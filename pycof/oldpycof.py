@@ -238,7 +238,9 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     elif ext.lower() in ['parq', 'parquet']:
         if type(engine) == str:
             if engine.lower() in ['py', 'pa', 'pyarrow']:
-                data = pq.read_table(path, **kwargs).to_pandas()
+                dataset = pq.ParquetDataset(path, **kwargs)
+                table = dataset.read()
+                data = table.to_pandas()
             else:
                 raise ValueError('Engine value not allowed')
         else:
@@ -379,7 +381,7 @@ def OneHotEncoding(dataset, column, drop=True, verbose=False):
 
     deprec_msg = """Deprecation!
     This function is being migrated to STATINF and will soon be removed from PYCOF.
-    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.OneHotEncoding
+    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.OneHotEncoding?orgn=py
     """
     warnings.warn(deprec_msg, Warning)
     all_values = dataset[column].unique()
@@ -419,7 +421,7 @@ def create_dataset(dataset, look_back=1):
 
     deprec_msg = """Deprecation!
     This function is being migrated to STATINF and will soon be removed from PYCOF.
-    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.create_dataset
+    Please see https://www.florianfelice.com/statinf/data/process.html#statinf.data.ProcessData.create_dataset?orgn=py
     """
     warnings.warn(deprec_msg, Warning)
 
@@ -454,16 +456,19 @@ def group(nb, digits=0):
     :Returns:
         * :obj:`str`: Transformed number.
     """
-    s = '%d' % nb
-    groups = []
-    if digits > 0:
-        dig = '.' + str(nb).split('.')[1][:digits]
+    if math.isnan(nb):
+        return('-')
     else:
-        dig = ''
-    while s and s[-1].isdigit():
-        groups.append(s[-3:])
-        s = s[:-3]
-    return s + ','.join(reversed(groups)) + dig
+        s = '%d' % nb
+        groups = []
+        if digits > 0:
+            dig = '.' + str(nb).split('.')[1][:digits]
+        else:
+            dig = ''
+        while s and s[-1].isdigit():
+            groups.append(s[-3:])
+            s = s[:-3]
+        return s + ','.join(reversed(groups)) + dig
 
 
 #######################################################################################################################

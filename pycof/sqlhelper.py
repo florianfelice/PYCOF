@@ -17,7 +17,7 @@ import json
 import datetime
 import hashlib
 
-from .misc import write, file_age, verbose_display
+from .misc import verbose_display, file_age, write
 
 # ========================
 # Cache data from SQL
@@ -25,25 +25,14 @@ from .misc import write, file_age, verbose_display
 def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_name=None, verbose=False):
     # Parse cache_time value
     if type(cache_time) in [float, int]:
-        cache_time = cache_time
+        c_time = cache_time
     else:
         # Force the input to be a string
         str_c_time = str(cache_time).lower().replace(' ', '')
         # Get the numerical part of the input
         c_time = float(''.join(re.findall('[^a-z]', str_c_time)))
-        # Find match
-        if ''.join(re.findall('[a-z]', str_c_time)) in ['seconds', 'second', 'sec', 's']:
-            cache_time = c_time
-        elif ''.join(re.findall('[a-z]', str_c_time)) in ['minutes', 'minute', 'mins', 'mns', 'm']:
-            cache_time = c_time * 60
-        elif ''.join(re.findall('[a-z]', str_c_time)) in ['hours', 'hour', 'hrs', 'h']:
-            cache_time = c_time * 60 * 60
-        elif ''.join(re.findall('[a-z]', str_c_time)) in ['days', 'day', 'd']:
-            cache_time = c_time * 60 * 60 * 24
-        elif ''.join(re.findall('[a-z]', str_c_time)) in ['weeks', 'week', 'wk', 'wks', 'w']:
-            cache_time = c_time * 60 * 60 * 24 * 7
-        else:
-            raise ValueError("Format for cache_time not valid. Can be 'seconds', 'minutes', 'hours', 'days', 'weeks'")
+        # Get the str part of the input - for the format
+        age_fmt = ''.join(re.findall('[a-z]', str_c_time))
 
     # Define the root folder depending on the OS
     root_path = f'C:/Users/{getpass.getuser()}/' + os.sep if sys.platform == 'win32' else '/'
@@ -72,15 +61,14 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
     # Chec if the cached data already exists
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
         # If file exists, checks its age
-        age = file_age(data_path + file_name)
-
-        if (query_type.upper() == "SELECT") & (age < cache_time):
-            # If file is younger than cache_time, we read the cached data
+        age = file_age(data_path + file_name, format=age_fmt)
+        if (query_type.upper() == "SELECT") & (age < c_time):
+            # If file is younger than c_time, we read the cached data
             verbose_display('Reading cached data', verbose)
             read = pd.read_csv(data_path + file_name)
         else:
             # Else we execute the SQL query and save the ouput + the query
-            verbose_display('Execute SQL query and cache the data', verbose)
+            verbose_display('Execute SQL query and cache the data - updating cache', verbose)
             read = pd.read_sql(sql, connection)
             write(sql, query_path + file_name, perm='w', verbose=verbose)
             read.to_csv(data_path + file_name, index=False)

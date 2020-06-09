@@ -40,6 +40,32 @@ See `SQL FAQ 2 <../sql/sql.html#how-to-use-different-credential-sets>`_.
 
 
 
+****************************************
+How to execute a query from an SQL file?
+****************************************
+
+See `SQL FAQ 3 <../sql/sql.html#how-to-execute-a-query-from-an-sql-file>`_.
+
+
+
+*********************************************
+How can I load a .json file as a dictionnary?
+*********************************************
+
+The function :py:meth:`~pycof.f_read` allows to read different formats.
+By default it will load as and :obj:`pandas.DataFrame` but you can provide :obj:`engine='json'` to load as :obj:`dict`.
+
+.. code:: python
+
+    import pycof as pc
+
+    pc.f_read('/path/to/file.json', engine='json')
+
+
+
+
+
+
 
 
 
