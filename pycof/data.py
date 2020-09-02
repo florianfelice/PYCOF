@@ -1,25 +1,29 @@
 import os
 import sys
 import getpass
+import boto3
 
 import pandas as pd
 import numpy as np
 import math
 import json
 import xlrd
+import hashlib
 import pyarrow.parquet as pq
+from io import StringIO, BytesIO
 
 import re
 
 from tqdm import tqdm
 import datetime
 
-from .misc import write
+from .misc import write, _get_config, file_age, verbose_display, _create_pycof_folder
+
 
 ##############################################################################################################################
 
 # Easy file read
-def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', **kwargs):
+def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', credentials={}, cache='30mins', verbose=False, **kwargs):
     """Read and parse a data file.
     It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
     The function will by default detect the extension from the file path. You can force an extension with the argument.
@@ -34,18 +38,77 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         * **sep** (:obj:`str`): Columns delimiter for pd.read_csv (defaults ',').
         * **sheet_name** (:obj:`str`): Tab column to load when reading Excel files (defaults 0).
         * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or the function from your preferred library (defaults 'pyarrow').
+        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to the engine or values to be formated in the file to load.
-        
 
     :Example:
 
         >>> pycof.f_read('/path/to/file.sql', country='FR')
+        >>> df = pycof.f_read('s3://bucket/path/to/file.parquet')
 
     :Returns:
         * :obj:`pandas.DataFrame`: Data frame a string from file read.
     """
     ext = path.split('.')[-1] if extension is None else extension
     data = []
+
+    useIAM = path.startswith('s3://')
+
+    if useIAM:
+        config = _get_config(credentials)
+        if config.get("AWS_SECRET_ACCESS_KEY") in [None, 'None', '']:
+            s3 = boto3.client('s3', profile_name='default')
+        else:
+            s3 = boto3.client('s3', aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
+                              aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
+                              region_name=config.get("REGION"))
+            s3_resource = boto3.resource('s3', aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
+                                         aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
+                                         region_name=config.get("REGION"))
+
+        bucket = path.replace('s3://', '').split('/')[0]
+        folder_path = '/'.join(path.replace('s3://', '').split('/')[1:])
+
+        if ext.lower() in ['csv', 'txt', 'parq', 'parquet']:
+            # If file can be loaded by pandas, we do not download locally
+            verbose_display('Loading the data from S3 directly', verbose)
+            obj = s3.get_object(Bucket=bucket, Key=folder_path)
+            path = BytesIO(obj['Body'].read())
+        else:
+            # This step will only check the cache and download the file to tmp if not available.
+            # The normal below steps will still run, only the path will change if the file comes from S3
+            # and cannot be loaded by pandas.
+
+            cache_time = 0. if cache is False else cache
+            # Force the input to be a string
+            str_c_time = str(cache_time).lower().replace(' ', '')
+            # Get the numerical part of the input
+            c_time = float(''.join(re.findall('[^a-z]', str_c_time)))
+            # Get the str part of the input - for the format
+            age_fmt = ''.join(re.findall('[a-z]', str_c_time))
+
+            # Hash the path to create filename
+            file_name = hashlib.sha224(bytes(path, 'utf-8')).hexdigest().replace('-', 'm') + '.' + ext.lower()
+            root_path = _create_pycof_folder()
+            data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
+
+            # Changing path to local once file is downloaded to tmp folder
+            path = data_path + file_name
+
+            # First, check if the same path has already been downloaded locally
+            if file_name in os.listdir(data_path):
+                # If yes, check when and compare to cache time
+                if file_age(data_path + file_name, format=age_fmt) < c_time:
+                    # If cache is recent, no need to download
+                    verbose_display('Data file available in cache', verbose)
+                else:
+                    # Otherwise, we update the cache
+                    verbose_display('Updating data in cache', verbose)
+                    s3_resource.Bucket(bucket).download_file(folder_path, path)
+            else:
+                # If the file is not in the cache, we download it
+                verbose_display('Downloading and caching data', verbose)
+                s3_resource.Bucket(bucket).download_file(folder_path, path)
 
     # CSV / txt
     if ext.lower() in ['csv', 'txt']:
@@ -118,7 +181,9 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = pd.read_json(path, **kwargs)
     # Parquet
     elif ext.lower() in ['parq', 'parquet']:
-        if type(engine) == str:
+        if useIAM:
+            data = pd.read_parquet(path)
+        elif type(engine) == str:
             if engine.lower() in ['py', 'pa', 'pyarrow']:
                 dataset = pq.ParquetDataset(path, **kwargs)
                 table = dataset.read()

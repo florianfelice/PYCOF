@@ -17,9 +17,10 @@ import json
 import datetime
 import hashlib
 
-from .misc import verbose_display, file_age, write
+from .misc import verbose_display, file_age, write, _get_config, _create_pycof_folder
 
-# ========================
+
+########################################################################################################################
 # Cache data from SQL
 
 def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_name=None, verbose=False):
@@ -34,22 +35,7 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
         # Get the str part of the input - for the format
         age_fmt = ''.join(re.findall('[a-z]', str_c_time))
 
-    # Define the root folder depending on the OS
-    root_path = f'C:/Users/{getpass.getuser()}/' + os.sep if sys.platform == 'win32' else '/'
-
-    # Check if cache folder exists
-    if not os.path.exists(os.path.join(root_path, 'tmp', 'pycof', 'cache')):
-        # If the PYCOF cache folder does not exist, we create all folders
-        folds, fs = [root_path + 'tmp', 'pycof', 'cache', 'queries'], []
-
-        for fold in folds:
-            # For each sub folder, we check if it already esists and created if not
-            fs = fs + [fold]
-            os.mkdir(os.path.join(*fs)) if os.path.exists(os.path.join(*fs)) is False else ''
-
-        # Create data folder if cache folder does not exist
-        data_fold = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data')
-        os.mkdir(data_fold) if os.path.exists(data_fold) is False else ''
+    root_path = _create_pycof_folder()
 
     # Hash the file's name to save the query and the data
     file_name = hashlib.sha224(bytes(sql, 'utf-8')).hexdigest().replace('-', 'm') if cache_file_name is None else cache_file_name
@@ -81,38 +67,8 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
 
     return read
 
-# ========================
-# Get config file
 
-def _get_config(credentials):
-    # ==========
-    # Parse credentials argument
-    if type(credentials) == str:
-        if '/' in credentials:
-            path = credentials
-        elif sys.platform == 'win32':
-            path = f'C:/Users/{getpass.getuser()}/' + credentials
-        else:
-            path = '/etc/' + credentials
-    elif (type(credentials) == dict) & (credentials == {}):
-        if sys.platform == 'win32':
-            path = f'C:/Users/{getpass.getuser()}/config.json'
-        else:
-            path = '/etc/config.json'
-    else:
-        path = ''
-
-    # ==========
-    # Load credentials
-    if path == '':
-        config = credentials
-    else:
-        with open(path) as config_file:
-            config = json.load(config_file)
-
-    return config
-
-# ========================
+########################################################################################################################
 # Get DB credentials
 
 def _get_credentials(config, useIAM=False):
@@ -163,7 +119,7 @@ def _get_credentials(config, useIAM=False):
     return hostname, port, user, password, database
 
 
-# ========================
+########################################################################################################################
 # Define connector from credentials
 
 def _define_connector(hostname, port, user, password, database=""):
@@ -189,7 +145,7 @@ def _define_connector(hostname, port, user, password, database=""):
     return connector, cursor
 
 
-# ========================
+########################################################################################################################
 # Insert data to DB
 
 def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=False):
@@ -204,7 +160,7 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     num = len(data)
     batches = int(num / 10000) + 1
 
-    # ====================================
+    ########################################################################################################################============
     # Fill Nan values if requested by user
     if autofill_nan:
         """
@@ -219,7 +175,7 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     else:
         data_load = data.values.tolist()
 
-    # ====================================
+    ########################################################################################################################============
     # Push 10k batches iterativeley and then push the remainder
     if num == 0:
         raise ValueError('len(data) == 0 -> No data to insert')
