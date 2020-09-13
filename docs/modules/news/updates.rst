@@ -11,17 +11,60 @@ Library versions in between are used to fix bugs and implement improvement sugge
 ----
 
 
-******************************************************************************************
-1.1.33 - May 17, 2020 - Improved query experience with :py:meth:`pycof.remote_execute_sql`
-******************************************************************************************
+***********************************************************************************************
+1.1.35 - September 13, 2020 - Connector engine added to :py:meth:`pycof.sql.remote_execute_sql`
+***********************************************************************************************
 
-We improved querying experience in :py:meth:`pycof.remote_execute_sql` by simplifying the argument :obj:`cache_time`
+The module :py:meth:`pycof.sql.remote_execute_sql` automaticaly detects a redshift cluster.
+The logic consists in checking whether the keyword *redshift* is contained in the public DNS of the AWS Redshift cluster.
+
+The module now includes an argument :obj:`engine` which allows to force the redshift connector.
+If you need another engine (neither Redshift nor MySQL), please submit an `issue`_.
+
+
+.. warning::
+    The module :obj:`datamngt` which contained :func:`~OneHotEncoding` and :func:`~create_dataset` is now deprecated.
+    To use these modules, please refer to `statinf`_.
+
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    pc.remote_execute_sql('my_example.sql', engine='redshift')
+
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.1.35
+
+
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
+
+
+----
+
+
+**********************************************************************************************
+1.1.33 - May 17, 2020 - Improved query experience with :py:meth:`pycof.sql.remote_execute_sql`
+**********************************************************************************************
+
+We improved querying experience in :py:meth:`pycof.sql.remote_execute_sql` by simplifying the argument :obj:`cache_time`
 and by allowing an :obj:`sql_query` as a path.
 
 Usage of argument :obj:`cache_time` has been improved by allowing users to provide a string with units (e.g. :obj:`24h`, :obj:`1.3mins`).
 Users still have the possibility to provide an integer representing file age in seconds.
 
-:py:meth:`pycof.remote_execute_sql` also now accepts a path for :obj:`sql_query`.
+:py:meth:`pycof.sql.remote_execute_sql` also now accepts a path for :obj:`sql_query`.
 The extension needs to be :obj:`.sql`.
 The path will then be passed to :py:meth:`pycof.f_read` to recover the SQL query.
 
@@ -51,7 +94,7 @@ How to install it?
     pip3 install pycof==1.1.33
 
 
-See more details: :py:meth:`pycof.remote_execute_sql`
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
 
 
 ----
@@ -165,11 +208,11 @@ See more details: :py:meth:`pycof.send_email`
 ----
 
 
-********************************************************************************
-1.1.11 - Dec 10, 2019 - :py:meth:`pycof.remote_execute_sql` now supports caching
-********************************************************************************
+************************************************************************************
+1.1.11 - Dec 10, 2019 - :py:meth:`pycof.sql.remote_execute_sql` now supports caching
+************************************************************************************
 
-:py:meth:`pycof.remote_execute_sql` can now cache your SELECT results.
+:py:meth:`pycof.sql.remote_execute_sql` can now cache your SELECT results.
 This will avoid querying the database several times when executing the command multiple times.
 The function will save the file in a temporary file by hasing your SQL query.
 See more `details <../sql/sql.html#caching-the-data>`_.
@@ -201,17 +244,17 @@ How to install it?
     pip3 install pycof==1.1.11
 
 
-See more details: :py:meth:`pycof.remote_execute_sql`
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
 
 
 ----
 
 
-****************************************************************************
-1.1.9 - Nov 23, 2019 - :py:meth:`pycof.remote_execute_sql` now supports COPY
-****************************************************************************
+********************************************************************************
+1.1.9 - Nov 23, 2019 - :py:meth:`pycof.sql.remote_execute_sql` now supports COPY
+********************************************************************************
 
-:py:meth:`pycof.remote_execute_sql` can now execute COPY commands on top of SELECT, INSERT and DELETE.
+:py:meth:`pycof.sql.remote_execute_sql` can now execute COPY commands on top of SELECT, INSERT and DELETE.
 The only requirement is the file :obj:`config.json` to bet setup once.
 See more `setup <../pycof.html#setup>`_ details.
 
@@ -243,15 +286,15 @@ How to install it?
     pip3 install pycof==1.1.9
 
 
-See more details: :py:meth:`pycof.remote_execute_sql`
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
 
 
 ----
 
 
-***************************************************************************************
-1.1.5 - Nov 15, 2019 - :py:meth:`pycof.remote_execute_sql` now supprots IAM credentials
-***************************************************************************************
+*******************************************************************************************
+1.1.5 - Nov 15, 2019 - :py:meth:`pycof.sql.remote_execute_sql` now supprots IAM credentials
+*******************************************************************************************
 
 You can now connect to your database though `IAM <https://aws.amazon.com/iam/features/manage-users/>`_.
 The only requirement is the file :obj:`config.json` to bet setup once.
@@ -282,7 +325,7 @@ How to install it?
     pip3 install pycof==1.1.5
 
 
-See more details: :py:meth:`pycof.remote_execute_sql`
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
 
 
 

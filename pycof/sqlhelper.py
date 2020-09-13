@@ -122,9 +122,10 @@ def _get_credentials(config, useIAM=False):
 ########################################################################################################################
 # Define connector from credentials
 
-def _define_connector(hostname, port, user, password, database=""):
+def _define_connector(hostname, port, user, password, database="", engine='default'):
     # Initiate sql connection to the Database
-    if 'redshift' in hostname.lower().split('.'):
+    if ('redshift' in hostname.lower().split('.')) or (engine.lower() == 'redshift'):
+        print('Using redshift')
         try:
             connector = psycopg2.connect(host=hostname, port=port, user=user, password=password, database=database)
             cursor = connector.cursor()

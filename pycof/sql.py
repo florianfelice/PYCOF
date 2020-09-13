@@ -25,7 +25,7 @@ from .format import file_age, verbose_display
 #######################################################################################################################
 
 # Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, cache=False, cache_name=None, **kwargs):
+def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, autofill_nan=True, useIAM=False, engine='default', cache=False, cache_name=None, **kwargs):
     """Simplified function for executing SQL queries. Will look at the credentials at :obj:`/etc/config.json`. User can also pass a dictionnary for credentials.
 
     :Parameters:
@@ -94,7 +94,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # Database connector
-    conn, cur = _define_connector(hostname, port, user, password, database)
+    conn, cur = _define_connector(hostname, port, user, password, database, engine=engine)
 
     # ========================================================================================
     # SELECT - Read query

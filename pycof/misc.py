@@ -144,12 +144,13 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
             folder_path = '/'.join(splitted_path[1:])
             file_name = splitted_path[-1]
             data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
+            path = data_path + file_name
 
-        with open(data_path + file_name, perm) as f:
+        with open(path, perm) as f:
             f.write(file + end_row)
 
         if useIAM:
-            s3.upload_file(data_path + file_name, bucket, folder_path)
+            s3.upload_file(path, bucket, folder_path)
     
     if verbose:
         return(len(file))
