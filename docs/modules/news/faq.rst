@@ -18,7 +18,7 @@ If the version is not the latest one, please upgrade it.
 
     pip3 install --upgrade pycof
 
-If you still encounter the same error with the most recent version, please raise an `issue`_
+If you still encounter the same error with the most recent version, please raise an `issue`_.
 
 
 ----

@@ -16,9 +16,9 @@ Library versions in between are used to fix bugs and implement improvement sugge
 ***********************************************************************************************
 
 The module :py:meth:`pycof.sql.remote_execute_sql` automaticaly detects a redshift cluster.
-The logic consists in checking whether the keyword *redshift* is contained in the public DNS of the AWS Redshift cluster.
+The logic consists in checking whether the keyword *redshift* is contained in the hostname of the AWS Redshift cluster.
 
-The module now includes an argument :obj:`engine` which allows to force the redshift connector.
+The module now includes an argument :obj:`engine` which allows to force the Redshift connector.
 If you need another engine (neither Redshift nor MySQL), please submit an `issue`_.
 
 
