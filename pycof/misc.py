@@ -16,7 +16,7 @@ import datetime
 ########################################################################################################################
 # Get config file
 
-def _create_pycof_folder(verbose=True):
+def _create_pycof_folder(verbose=False):
     # Define the root folder depending on the OS
     root_path = f'C:/Users/{getpass.getuser()}/' + os.sep if sys.platform == 'win32' else '/'
 
