@@ -50,33 +50,43 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # Define the SQL type
-    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY', 'UNLOAD', 'UPDATE']
+    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY', 'UNLOAD', 'UPDATE', 'CREATE', 'GRANT']
 
     if (query_type != ""):
         # Use user input if query_type is not as its default value
         sql_type = query_type
-    elif (sql_query != ""):
-        # If a query is inserted, use select.
-        # For DELETE or COPY, user needs to provide the query_type
-        sql_type = "SELECT"
-        # Can read an external file is path is given as sql_query
-        if '.sql' in sql_query.lower():
-            sql_query = f_read(sql_query, extension='sql', **kwargs)
-            assert sql_query != '', 'Could not read your SQL file properly. Please make sure your file is saved or check your path.'
-    elif (data != {}) or (type(sql_query) == pd.DataFrame):
+    elif type(data) == pd.DataFrame:
         # If data is provided, use INSERT sql_type
         sql_type = 'INSERT'
+    elif type(sql_query) == pd.DataFrame:
+        # If data is instead of an SQL query, use INSERT sql_type
+        sql_type = 'INSERT'
+        data = sql_query
     elif ("UNLOAD" in sql_query.upper()):
         sql_type = 'UNLOAD'
     elif ("COPY" in sql_query.upper()):
         sql_type = 'COPY'
     elif ("UPDATE" in sql_query.upper()):
         sql_type = 'UPDATE'
+    elif ("CREATE" in sql_query.upper()):
+        sql_type = 'CREATE'
+    elif (sql_query != ""):
+        # If a query is inserted, use select.
+        # For DELETE or COPY, user needs to provide the query_type
+        sql_type = "SELECT"
     else:
         allowed_queries = f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
         # Check if the query_type value is correct
         raise ValueError(allowed_queries + f'. Got {query_type}')
         # assert query_type.upper() in all_query_types, allowed_queries
+    
+    # ============================================================================================
+    # Process SQL query
+    if sql_type != 'INSERT':
+        if (sql_query != "") & ('.sql' in sql_query.lower()):
+            # Can read an external file is path is given as sql_query
+            sql_query = f_read(sql_query, extension='sql', **kwargs)
+            assert sql_query != '', 'Could not read your SQL file properly. Please make sure your file is saved or check your path.'
 
     # ============================================================================================
     # Credentials load
@@ -111,7 +121,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # DELETE / COPY / UNLOAD - Execute SQL command which does not return output
-    elif sql_type.upper() in ["DELETE", "COPY", "UNLOAD", "UPDATE"]:
+    elif sql_type.upper() in ["CREATE", "GRANT", "DELETE", "COPY", "UNLOAD", "UPDATE"]:
         if table.upper() in sql_query.upper():
             cur.execute(sql_query)
             conn.commit()

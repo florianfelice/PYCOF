@@ -11,6 +11,60 @@ Library versions in between are used to fix bugs and implement improvement sugge
 ----
 
 
+****************************************************************************************
+1.1.37 - September 30, 2020 - SQLite database on :py:meth:`pycof.sql.remote_execute_sql`
+****************************************************************************************
+
+The module :py:meth:`pycof.sql.remote_execute_sql` now supports local `SQLite <https://www.sqlite.org>`_ connections.
+Extending from MySQL and AWS Redshift databases, users can now work with local databases thanks to `SQLite <https://www.sqlite.org>`_.
+This will allow users to play with infrastructure running on their local machine (overcoming the problem of remote servers and potential cost infrastructure).
+
+The adapted :obj:`config.json` structure is:
+
+.. code-block:: python
+
+   {
+   "DB_USER": "",
+   "DB_PASSWORD": "",
+   "DB_HOST": "/path/to/sqlite.db",
+   "DB_PORT": "sqlite3",
+   "DB_DATABASE": "",
+   }
+
+
+The module will automatically detect the connection if the keyword `sqlite` appears in the path to the database.
+User can also define the port as `sqlite` if the path does not contain the keyword.
+A final option is given to force the connection with the argument :obj:`engine='sqlite3'`.
+
+The module will offer the same functionality as the first two connectors.
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    pc.remote_execute_sql('my_example.sql', engine='sqlite3')
+
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.1.37
+
+
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
+
+
+----
+
+
 ***********************************************************************************************
 1.1.35 - September 13, 2020 - Connector engine added to :py:meth:`pycof.sql.remote_execute_sql`
 ***********************************************************************************************

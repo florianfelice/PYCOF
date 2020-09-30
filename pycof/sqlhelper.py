@@ -3,6 +3,7 @@ import botocore
 
 import pymysql
 import psycopg2
+import sqlite3
 
 import pandas as pd
 import numpy as np
@@ -16,6 +17,7 @@ import getpass
 import json
 import datetime
 import hashlib
+import warnings
 
 from .misc import verbose_display, file_age, write, _get_config, _create_pycof_folder
 
@@ -74,17 +76,22 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
 def _get_credentials(config, useIAM=False):
 
     # Access DB credentials
-    hostname = config.get('DB_HOST')      # Read the host name value from the config dictionnary
-    port = int(config.get('DB_PORT'))     # Get the port from the config file and convert it to int
+    try:
+        hostname = config.get('DB_HOST')      # Read the host name value from the config dictionnary
+    except Exception:
+        raise ValueError('Could not get the hostname')
+    
+    port = config.get('DB_PORT')          # Get the port from the config file and convert it to int
     user = config.get('DB_USER')          # Get the user name for connecting to the DB
     password = config.get('DB_PASSWORD')  # Get the DB
+
+    # AWS and Redshift specific parameters
     database = config.get('DB_DATABASE')  # For Redshift, use the database, for MySQL set it by default to ""
-    #
     access_key   = config.get("AWS_ACCESS_KEY_ID")
     secret_key   = config.get("AWS_SECRET_ACCESS_KEY")
     region       = config.get("REGION")
     cluster_name = config.get("CLUSTER_NAME")
-    #
+
     boto_error = """Cannot initialize the boto3 session. Please check your config file and ensure awscli is installed.\n
     To install awcli, please run: \n
     pip install awscli -y && aws configure\n
@@ -126,10 +133,16 @@ def _define_connector(hostname, port, user, password, database="", engine='defau
     # Initiate sql connection to the Database
     if ('redshift' in hostname.lower().split('.')) or (engine.lower() == 'redshift'):
         try:
-            connector = psycopg2.connect(host=hostname, port=port, user=user, password=password, database=database)
+            connector = psycopg2.connect(host=hostname, port=int(port), user=user, password=password, database=database)
             cursor = connector.cursor()
         except Exception:
             raise ValueError('Failed to connect to the Redshfit cluster')
+    elif (hostname.lower().find('sqlite') > -1) or (port.lower() in ['sqlite', 'sqlite3']) or (engine.lower() in ['sqlite', 'sqlite3']):
+        try:
+            connector = sqlite3.connect(hostname)
+            cursor = connector.cursor()
+        except Exception:
+            raise ValueError('Failed to connect to the sqlite database')
     else:
         try:
             # Add new encoder of numpy.float64
@@ -137,7 +150,7 @@ def _define_connector(hostname, port, user, password, database="", engine='defau
             pymysql.converters.conversions = pymysql.converters.encoders.copy()
             pymysql.converters.conversions.update(pymysql.converters.decoders)
             # Create connection
-            connector = pymysql.connect(host=hostname, port=port, user=user, password=password)
+            connector = pymysql.connect(host=hostname, port=int(port), user=user, password=password)
             cursor = connector.cursor()
         except Exception:
             raise ValueError('Failed to connect to the MySQL database')
@@ -161,6 +174,22 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     batches = int(num / 10000) + 1
 
     ########################################################################################################################============
+    # Transform date columns to str before loading
+    warnings.filterwarnings('ignore')  # Removing filter warning when changing data type
+    dt_cols = []
+    for col in data.columns:
+        if data[col].dtype == 'object':
+            try:
+                data.loc[:, col] = pd.to_datetime(data[col]).apply(str)
+                dt_cols += [col]
+            except ValueError:
+                pass
+        elif data[col].dtype in [np.dtype('<M8[ns]'), np.dtype('datetime64[ns]')]:
+            dt_cols += [col]
+            data.loc[:, col] = data[col].apply(str)
+    warnings.filterwarnings('default')  # Putting warning back
+
+    ########################################################################################################################============
     # Fill Nan values if requested by user
     if autofill_nan:
         """
@@ -175,19 +204,25 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     else:
         data_load = data.values.tolist()
 
+
     ########################################################################################################################============
     # Push 10k batches iterativeley and then push the remainder
+    if type(connector) == sqlite3.Connection:
+        insert_string = f'INSERT INTO {table} ({columns_string}) VALUES ({"?, "*col_num} ? )'
+    else:
+        insert_string = f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )'
+
     if num == 0:
         raise ValueError('len(data) == 0 -> No data to insert')
     elif num > 10000:
         rg = tqdm(range(0, batches - 1)) if verbose else range(0, batches - 1)
         for i in rg:
-            cursor.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[i * 10000:(i + 1) * 10000])
+            cursor.executemany(insert_string, data_load[i * 10000:(i + 1) * 10000])
             connector.commit()
         # Push the remainder
-        cursor.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load[(batches - 1) * 10000:])
+        cursor.executemany(insert_string, data_load[(batches - 1) * 10000:])
         connector.commit()
     else:
         # Push everything if less then 10k (SQL Server limit)
-        cursor.executemany(f'INSERT INTO {table} ({columns_string}) VALUES ({"%s, "*col_num} %s )', data_load)
+        cursor.executemany(insert_string, data_load)
         connector.commit()
