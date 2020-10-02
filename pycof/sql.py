@@ -68,8 +68,6 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         sql_type = 'COPY'
     elif ("UPDATE" in sql_query.upper()):
         sql_type = 'UPDATE'
-    elif ("CREATE" in sql_query.upper()):
-        sql_type = 'CREATE'
     elif (sql_query != ""):
         # If a query is inserted, use select.
         # For DELETE or COPY, user needs to provide the query_type
