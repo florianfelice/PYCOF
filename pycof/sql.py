@@ -62,11 +62,11 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         # If data is instead of an SQL query, use INSERT sql_type
         sql_type = 'INSERT'
         data = sql_query
-    elif ("UNLOAD" in sql_query.upper()):
+    elif ("UNLOAD " in sql_query.upper()):
         sql_type = 'UNLOAD'
-    elif ("COPY" in sql_query.upper()):
+    elif ("COPY " in sql_query.upper()):
         sql_type = 'COPY'
-    elif ("UPDATE" in sql_query.upper()):
+    elif ("UPDATE " in sql_query.upper()):
         sql_type = 'UPDATE'
     elif (sql_query != ""):
         # If a query is inserted, use select.

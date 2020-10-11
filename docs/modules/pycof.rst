@@ -5,7 +5,9 @@ PYCOF
    :target: https://pepy.tech/project/pycof
 .. image:: https://badge.fury.io/py/pycof.svg
    :target: https://pypi.org/project/pycof/
-
+.. image:: https://github.com/fluidicon.png
+    :width: 32
+    :target: https://github.com/florianfelice/PYCOF
 
 PYCOF is a library to group some useful functions on Python.
 The library helps running SQL queries or send emails in a much simpler way. 
