@@ -18,6 +18,7 @@ import json
 import datetime
 import hashlib
 import warnings
+import csv
 
 from .misc import verbose_display, file_age, write, _get_config, _create_pycof_folder
 
@@ -53,19 +54,19 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
         if (query_type.upper() == "SELECT") & (age < c_time):
             # If file is younger than c_time, we read the cached data
             verbose_display('Reading cached data', verbose)
-            read = pd.read_csv(data_path + file_name)
+            read = pd.read_csv(data_path + file_name, quoting=csv.QUOTE_NONNUMERIC, low_memory=False))
         else:
             # Else we execute the SQL query and save the ouput + the query
             verbose_display('Execute SQL query and cache the data - updating cache', verbose)
             read = pd.read_sql(sql, connection)
             write(sql, query_path + file_name, perm='w', verbose=verbose)
-            read.to_csv(data_path + file_name, index=False)
+            read.to_csv(data_path + file_name, index=False, quoting=csv.QUOTE_NONNUMERIC)
     else:
         # If the file does not even exist, we execute SQL, save the query and its output
         verbose_display('Execute SQL query and cache the data', verbose)
         read = pd.read_sql(sql, connection)
         write(sql, query_path + file_name, perm='w', verbose=verbose)
-        read.to_csv(data_path + file_name, index=False)
+        read.to_csv(data_path + file_name, index=False, quoting=csv.QUOTE_NONNUMERIC)
 
     return read
 
