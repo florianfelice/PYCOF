@@ -110,7 +110,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         if cache:
             read = _cache(sql_query, conn, sql_type, cache_time=cache, verbose=verbose, cache_file_name=cache_name)
         else:
-            read = pd.read_sql(sql_query, conn)
+            read = pd.read_sql(sql_query, conn, coerce_float= False)
         return(read)
     # ============================================================================================
     # INSERT - Load data to the db
