@@ -81,7 +81,7 @@ def _get_credentials(config, useIAM=False):
         hostname = config.get('DB_HOST')      # Read the host name value from the config dictionnary
     except Exception:
         raise ValueError('Could not get the hostname')
-    
+
     port = config.get('DB_PORT')          # Get the port from the config file and convert it to int
     user = config.get('DB_USER')          # Get the user name for connecting to the DB
     password = config.get('DB_PASSWORD')  # Get the DB
@@ -174,7 +174,7 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     num = len(data)
     batches = int(num / 10000) + 1
 
-    ########################################################################################################################============
+    # #######################################################################################################################============
     # Transform date columns to str before loading
     warnings.filterwarnings('ignore')  # Removing filter warning when changing data type
     dt_cols = []
@@ -190,7 +190,7 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
             data.loc[:, col] = data[col].apply(str)
     warnings.filterwarnings('default')  # Putting warning back
 
-    ########################################################################################################################============
+    # #######################################################################################################################============
     # Fill Nan values if requested by user
     if autofill_nan:
         """
@@ -205,8 +205,7 @@ def _insert_data(data, table, connector, cursor, autofill_nan=False, verbose=Fal
     else:
         data_load = data.values.tolist()
 
-
-    ########################################################################################################################============
+    # #######################################################################################################################============
     # Push 10k batches iterativeley and then push the remainder
     if type(connector) == sqlite3.Connection:
         insert_string = f'INSERT INTO {table} ({columns_string}) VALUES ({"?, "*col_num} ? )'
