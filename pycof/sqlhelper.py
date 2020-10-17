@@ -54,7 +54,7 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
         if (query_type.upper() == "SELECT") & (age < c_time):
             # If file is younger than c_time, we read the cached data
             verbose_display('Reading cached data', verbose)
-            read = pd.read_csv(data_path + file_name, quoting=csv.QUOTE_NONNUMERIC, low_memory=False))
+            read = pd.read_csv(data_path + file_name, quoting=csv.QUOTE_NONNUMERIC, low_memory=False)
         else:
             # Else we execute the SQL query and save the ouput + the query
             verbose_display('Execute SQL query and cache the data - updating cache', verbose)
