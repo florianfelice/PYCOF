@@ -16,34 +16,40 @@ import datetime
 ########################################################################################################################
 # Get config file
 
-def _create_pycof_folder(verbose=False):
+def _pycof_folders(output=None, verbose=False):
     # Define the root folder depending on the OS
-    root_path = f'C:/Users/{getpass.getuser()}/' + os.sep if sys.platform == 'win32' else '/'
+    if sys.platform in ['win32', 'win64', 'cygwin', 'msys']:
+        temp_path = os.environ['TEMP'] + os.sep
+        creds_fold = os.path.join(os.environ['USERPROFILE'], '.pycof')  + os.sep
+    else:
+        temp_path = os.path.join(os.sep, 'tmp') + os.sep
+        creds_fold = '/etc/'
 
-    # Check if cache folder exists
-    if not os.path.exists(os.path.join(root_path, 'tmp', 'pycof', 'cache')):
-        if verbose:
-            print('Creating the PYCOF cache folders')
-        # If the PYCOF cache folder does not exist, we create all folders
-        folds, fs = [root_path + 'tmp', 'pycof', 'cache', 'queries'], []
+    # Credentials folder
+    _created_c = 1 if os.path.exists(creds_fold) else os.makedirs(creds_fold)
+    # Queries temp folder
+    folds_q = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
+    _created_q = 1 if os.path.exists(folds_q) else os.makedirs(folds_q)
+    # Data temp folder
+    folds_d = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
+    _created_d = 1 if os.path.exists(folds_d) else os.makedirs(folds_d)
 
-        for fold in folds:
-            # For each sub folder, we check if it already esists and created if not
-            fs = fs + [fold]
-            os.mkdir(os.path.join(*fs)) if os.path.exists(os.path.join(*fs)) is False else ''
+    _created = 3 - _created_c - _created_q - _created_d
 
-        # Create data folder if cache folder does not exist
-        data_fold = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data')
-        os.mkdir(data_fold) if os.path.exists(data_fold) is False else ''
+    # Return path if asked by user
+    if output in ['tmp', 'temp']:
+        return temp_path
+    elif output == 'creds':
+        return creds_fold
+    elif output == 'queries':
+        return folds_q
+    elif output == 'data':
+        return folds_d
     elif verbose:
-        print('PYCOF cache folders already exist')
-
-    return root_path
+        print(f'PYCOF folder created: {_created}')
 
 
-
-
-########################################################################################################################
+# #######################################################################################################################
 # Get config file
 
 def _get_config(credentials):
@@ -52,15 +58,10 @@ def _get_config(credentials):
     if type(credentials) == str:
         if '/' in credentials:
             path = credentials
-        elif sys.platform == 'win32':
-            path = f'C:/Users/{getpass.getuser()}/' + credentials
         else:
-            path = '/etc/' + credentials
+            path = os.path.join(_pycof_folders(output='creds'), credentials)
     elif (type(credentials) == dict) & (credentials == {}):
-        if sys.platform == 'win32':
-            path = f'C:/Users/{getpass.getuser()}/config.json'
-        else:
-            path = '/etc/config.json'
+        path = os.path.join(_pycof_folders(output='creds'), 'config.json')
     else:
         path = ''
 
@@ -80,7 +81,8 @@ def _get_config(credentials):
 
 def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **kwargs):
     """Write a line of text into a file (usually .txt) or saves data objects.
-    As opposed to Pandas' built-in functions (:obj:`to_csv` or :obj:`to_parquet`), this function allows to pass AWS IAM credentials similar to :py:meth:`pycof.sql.remote_execute_sql`.
+    As opposed to Pandas' built-in functions (:obj:`to_csv` or :obj:`to_parquet`), this function allows to pass AWS IAM credentials similar to
+    :py:meth:`pycof.sql.remote_execute_sql`.
 
     :Parameters:
         * **file** (:obj:`str` or :obj:`pandas.DataFrame`): Line of text or object to be inserted in the file.
@@ -88,7 +90,8 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
         * **perm** (:obj:`str`): Permission to use when opening file (usually 'a' for appending text, or 'w' to (re)write file).
         * **verbose** (:obj:`bool`): Return the length of the inserted text if set to True (defaults False).
         * **end_row** (:obj:`str`): Character to end the row (defaults '\\n').
-        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
+        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name
+        from '/etc/' (defaults {}).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to pandas function (either :obj:`to_csv` or :obj:`to_parquet`).
 
     :Example:
@@ -109,8 +112,8 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
             s3_resource = boto3.resource("s3", profile_name='default')
         else:
             s3 = boto3.client("s3", aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
-                                         aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
-                                         region_name=config.get("REGION"))
+                              aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
+                              region_name=config.get("REGION"))
             s3_resource = boto3.resource("s3", aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
                                          aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
                                          region_name=config.get("REGION"))
@@ -138,12 +141,11 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
     # Other input file format
     else:
         if useIAM:
-            root_path = _create_pycof_folder()
             splitted_path = path.replace('s3://', '').split('/')
             bucket = splitted_path[0]
             folder_path = '/'.join(splitted_path[1:])
             file_name = splitted_path[-1]
-            data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
+            data_path = os.path.join(_pycof_folders('temp'), 'pycof', 'cache', 'data') + os.sep
             path = data_path + file_name
 
         with open(path, perm) as f:
@@ -151,7 +153,7 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
 
         if useIAM:
             s3.upload_file(path, bucket, folder_path)
-    
+
     if verbose:
         return(len(file))
 
@@ -179,13 +181,13 @@ def file_age(file_path, format='seconds'):
     if format.lower() in ['s', 'sec', 'second', 'seconds']:
         return ttl_sec
     elif format.lower() in ['m', 'min', 'mins', 'minute', 'minutes']:
-        return ttl_sec/60
+        return ttl_sec / 60
     elif format.lower() in ['h', 'hr', 'hrs', 'hour', 'hours']:
-        return ttl_sec/3600
+        return ttl_sec / 3600
     elif format.lower() in ['d', 'day', 'days']:
-        return ttl_sec/(24*60*60)
+        return ttl_sec / (24 * 60 * 60)
     elif format.lower() in ['w', 'wk', 'wks', 'week', 'weeks']:
-        return ttl_sec/(7*24*60*60)
+        return ttl_sec / (7 * 24 * 60 * 60)
     else:
         raise ValueError(f"Format value is not correct. Can be 'seconds', 'minutes', 'hours', 'days' or 'weeks'. Got '{format}'.")
 
@@ -208,17 +210,17 @@ def verbose_display(element, verbose=True, sep=' ', end='\n', return_list=False)
         >>> for i in pycof.verbose_display(range(15)):
         >>>     i += 1
         ... 100%|#######################################| 15/15 [00:00<00:00, 211122.68it/s]
-    
+
     :Returns:
         :obj:`str`: The element to be displayed.
     """
-    if (verbose in [1, True]) & (type(element) in [list, range]) & (return_list == False):
+    if (verbose in [1, True]) & (type(element) in [list, range]) & (return_list is False):
         return(tqdm(element))
-    elif (verbose in [1, True]) & (type(element) in [list]) & (return_list == True):
-        return(print(*element, sep = sep, end = end))
-    elif (verbose in [1, True]) & (type(element) in [str]) & (return_list == False):
-        return(print(element, sep = sep, end = end))
+    elif (verbose in [1, True]) & (type(element) in [list]) & (return_list is True):
+        return(print(*element, sep=sep, end=end))
+    elif (verbose in [1, True]) & (type(element) in [str]) & (return_list is False):
+        return(print(element, sep=sep, end=end))
     elif (verbose in [0, False]) & (type(element) in [str, type(None)]):
-        disp = 0 # we don't display anything
+        disp = 0  # we don't display anything
     else:
         return(element)

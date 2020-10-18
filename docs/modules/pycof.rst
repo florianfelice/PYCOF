@@ -35,7 +35,7 @@ Setup
 =====
 
 The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will, by default, look for the credentials located in :obj:`/etc/config.json`.
-On Windows, save the config file as :obj:`C:/Windows/config.json`.
+On Windows, save the config file as :obj:`C:/Users/<username>/config.json`.
 
 The file follows the below structure:
 
@@ -68,9 +68,9 @@ On Unix based system, run:
 
 and paste the above json after filling the empty strings (pre-filled values are standard default values).
 
-**Reminder:** To save the file, with nano press :obj:`CTRL + O`, confirm with :obj:`b` then :obj:`CTRL + X` to exit.
+**Reminder:** To save the file, with nano press :obj:`CTRL + O`, confirm with :obj:`ENTER` then :obj:`CTRL + X` to exit.
 
-On Windows, use the path :obj:`C:/Windows/config.json`.
+On Windows, use the path :obj:`C:/Users/<username>/config.json`.
 
 
 Available functions

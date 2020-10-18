@@ -17,7 +17,7 @@ import re
 from tqdm import tqdm
 import datetime
 
-from .misc import write, _get_config, file_age, verbose_display, _create_pycof_folder
+from .misc import write, _get_config, file_age, verbose_display, _pycof_folders
 
 
 ##############################################################################################################################

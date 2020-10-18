@@ -20,7 +20,7 @@ import hashlib
 import warnings
 import csv
 
-from .misc import verbose_display, file_age, write, _get_config, _create_pycof_folder
+from .misc import verbose_display, file_age, write, _get_config, _pycof_folders
 
 
 ########################################################################################################################
@@ -38,14 +38,12 @@ def _cache(sql, connection, query_type="SELECT", cache_time='24h', cache_file_na
         # Get the str part of the input - for the format
         age_fmt = ''.join(re.findall('[a-z]', str_c_time))
 
-    root_path = _create_pycof_folder()
-
     # Hash the file's name to save the query and the data
     file_name = hashlib.sha224(bytes(sql, 'utf-8')).hexdigest().replace('-', 'm') if cache_file_name is None else cache_file_name
 
     # Set the query and data paths
-    query_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'queries') + '/'
-    data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
+    query_path = _pycof_folders('queries')
+    data_path = _pycof_folders('data')
 
     # Chec if the cached data already exists
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
