@@ -2,23 +2,20 @@
 from requests import get
 from bs4 import BeautifulSoup
 
-import sys, os
+import sys
+import os
 import getpass
 import json
 
 import argparse
 
 
-## Define 
+# Define
 library = 'PYCOF'
 desc = "A package for commonly used functions"
 requirements = ['pandas>=0.24.1', 'numpy>=1.16.3', 'psycopg2-binary>=2.7.4',
-'pymysql>=0.9.3', 'tqdm>=4.35.0', 'boto3>=1.9.219', 'xlrd>=1.2.0',
-'matplotlib>=3.1.1', 'pyarrow>=0.16.0']
-
-
-
-
+                'pymysql>=0.9.3', 'tqdm>=4.35.0', 'boto3>=1.9.219', 'xlrd>=1.2.0',
+                'matplotlib>=3.1.1', 'pyarrow>=0.16.0']
 
 
 # Collect arguments
@@ -43,18 +40,17 @@ lib_path = path + library
 os.chdir(lib_path)
 
 
-
 # Define new version number is not provided in arguments
 if args.version is None:
     if args.test:
         url = f'https://test.pypi.org/project/{library}/'
     else:
         url = f'https://pypi.org/project/{library}/'
-    
+
     response = get(url)
 
     soup = BeautifulSoup(response.text, 'html.parser')
-    
+
     version_tag = soup.findAll("h1", {"class": "package-header__name"})
     version = str(version_tag[0]).split('\n')[1].split(' ')[-1]
     version_splitted = version.split('.')
@@ -105,16 +101,12 @@ else:
 
 # Commit to git and push
 if args.publish:
-    os.system(f"git add --all")
+    os.system("git add --all")
     os.system(f"git tag -a v{new_version} -m 'Version {new_version} on pypi. {args.message}'")
     os.system(f"git commit -a -m 'Upload version {new_version} to pypi. {args.message}'")
-    os.system(f"git push")
+    os.system("git push")
     git_update = 'and changes pushed to git'
 else:
     git_update = ""
 
 print(f'\n\n New version {new_version} loaded on PyPi {git_update}')
-
-
-
-

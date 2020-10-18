@@ -74,7 +74,7 @@ I am having issues when installing pycof on Windows, is this a known issue?
 ***************************************************************************
 
 One of the dependencies for PYCOF is `pyarrow <https://arrow.apache.org/docs/python/>`_ which is not compatible on Windows 32bits.
-Check if your computer is running on 32 or 64 bits (`Windows documentation <https://support.microsoft.com/en-us/help/15056/windows-32-64-bit-faq>`_).
+Check whether your computer is running on 32 or 64 bits (`Windows documentation <https://support.microsoft.com/en-us/help/15056/windows-32-64-bit-faq>`_).
 If your computer is 64 bits, check what your default python is using:
 
 .. code:: bash
