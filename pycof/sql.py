@@ -31,13 +31,11 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
     credentials.
 
     :Parameters:
-        * **sql_query** (:obj:`str`): SQL query to be executed. Allows a string containing the SQL or a path containing the extension '.sql'
-        (defaults "").
+        * **sql_query** (:obj:`str`): SQL query to be executed. Allows a string containing the SQL or a path containing the extension '.sql' (defaults "").
         * **query_type** (:obj:`str`): Type of SQL query to execute. Can either be SELECT, INSERT, COPY, DELETE or UNLOAD (defaults "SELECT").
         * **table** (:obj:`str`): Table in which we want to operate, only used for INSERT and DELETE (defaults "").
         * **data** (:obj:`pandas.DataFrame`): Data to load on the database (defaults {}).
-        * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file
-        name from '/etc/' (defaults {}).
+        * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         * **verbose** (:obj:`bool`): Display progression bar (defaults True).
         * **autofill_nan** (:obj:`bool`): Replace NaN values by 'NULL' (defaults True).
         * **useIAM** (:obj:`bool`): Get AWS IAM credentials using access and secret key (defaults False).
