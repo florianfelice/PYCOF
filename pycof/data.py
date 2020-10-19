@@ -43,8 +43,10 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
 
     :Example:
 
-        >>> pycof.f_read('/path/to/file.sql', country='FR')
-        >>> df = pycof.f_read('s3://bucket/path/to/file.parquet')
+        >>> sql = pycof.f_read('/path/to/file.sql', country='FR')
+        >>> df1 = pycof.f_read('/path/to/df_file.json')
+        >>> df2 = pycof.f_read('/path/to/df.csv')
+        >>> df3 = pycof.f_read('s3://bucket/path/to/file.parquet')
 
     :Returns:
         * :obj:`pandas.DataFrame`: Data frame a string from file read.

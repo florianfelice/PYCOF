@@ -70,7 +70,7 @@ and paste the above json after filling the empty strings (pre-filled values are 
 
 **Reminder:** To save the file, with nano press :obj:`CTRL + O`, confirm with :obj:`ENTER` then :obj:`CTRL + X` to exit.
 
-On Windows, use the path :obj:`C:/Users/<username>/config.json`.
+On Windows, use the path :obj:`C:/Users/<username>/.pycof/config.json`.
 
 
 Available functions

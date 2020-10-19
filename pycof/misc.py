@@ -90,8 +90,7 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
         * **perm** (:obj:`str`): Permission to use when opening file (usually 'a' for appending text, or 'w' to (re)write file).
         * **verbose** (:obj:`bool`): Return the length of the inserted text if set to True (defaults False).
         * **end_row** (:obj:`str`): Character to end the row (defaults '\\n').
-        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name
-        from '/etc/' (defaults {}).
+        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to pandas function (either :obj:`to_csv` or :obj:`to_parquet`).
 
     :Example:
