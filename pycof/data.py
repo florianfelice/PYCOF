@@ -59,7 +59,11 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     if useIAM:
         config = _get_config(credentials)
         if config.get("AWS_SECRET_ACCESS_KEY") in [None, 'None', '']:
-            s3 = boto3.client('s3', profile_name='default')
+            try:
+                s3 = boto3.client('s3')
+                s3_resource = boto3.resource('s3')
+            except Exception:
+                raise ConnectionError("Please run 'aws config' on your terminal and initialize the parameters.")
         else:
             s3 = boto3.client('s3', aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
                               aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
@@ -82,6 +86,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             # and cannot be loaded by pandas.
 
             cache_time = 0. if cache is False else cache
+            _disp = tqdm if verbose else list
             # Force the input to be a string
             str_c_time = str(cache_time).lower().replace(' ', '')
             # Get the numerical part of the input
@@ -90,27 +95,40 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             age_fmt = ''.join(re.findall('[a-z]', str_c_time))
 
             # Hash the path to create filename
-            file_name = hashlib.sha224(bytes(path, 'utf-8')).hexdigest().replace('-', 'm') + '.' + ext.lower()
-            root_path = _create_pycof_folder()
-            data_path = os.path.join(root_path, 'tmp', 'pycof', 'cache', 'data') + '/'
+            file_name = hashlib.sha224(bytes(path, 'utf-8')).hexdigest().replace('-', 'm')
+            data_path = _pycof_folders('data')
 
             # Changing path to local once file is downloaded to tmp folder
             path = data_path + file_name
+
+            # Set the S3 bucket
+            s3bucket = s3_resource.Bucket(bucket)
 
             # First, check if the same path has already been downloaded locally
             if file_name in os.listdir(data_path):
                 # If yes, check when and compare to cache time
                 if file_age(data_path + file_name, format=age_fmt) < c_time:
                     # If cache is recent, no need to download
+                    ext = os.listdir(path)[0].split('.')[-1]
                     verbose_display('Data file available in cache', verbose)
                 else:
                     # Otherwise, we update the cache
                     verbose_display('Updating data in cache', verbose)
-                    s3_resource.Bucket(bucket).download_file(folder_path, path)
+                    for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
+                        if obj.key == folder_path:
+                            continue
+                        s3bucket.download_file(obj.key, path + obj.key.split('/')[-1])
+                        ext = obj.key.split('.')[-1]
             else:
                 # If the file is not in the cache, we download it
                 verbose_display('Downloading and caching data', verbose)
-                s3_resource.Bucket(bucket).download_file(folder_path, path)
+                # Creating the directory
+                os.makedirs(path, exist_ok=True)
+                for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
+                    if obj.key == folder_path:
+                        continue
+                    s3bucket.download_file(obj.key, path + obj.key.split('/')[-1])
+                    ext = obj.key.split('.')[-1]
 
     # CSV / txt
     if ext.lower() in ['csv', 'txt']:
