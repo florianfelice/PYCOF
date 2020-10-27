@@ -117,7 +117,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
                     for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
                         if obj.key == folder_path:
                             continue
-                        s3bucket.download_file(obj.key, path + obj.key.split('/')[-1])
+                        s3bucket.download_file(obj.key, path + '/' + obj.key.split('/')[-1])
                         ext = obj.key.split('.')[-1]
             else:
                 # If the file is not in the cache, we download it
@@ -127,7 +127,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
                 for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
                     if obj.key == folder_path:
                         continue
-                    s3bucket.download_file(obj.key, path + obj.key.split('/')[-1])
+                    s3bucket.download_file(obj.key, path + '/' + obj.key.split('/')[-1])
                     ext = obj.key.split('.')[-1]
 
     # CSV / txt

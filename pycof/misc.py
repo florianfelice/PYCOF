@@ -25,16 +25,25 @@ def _pycof_folders(output=None, verbose=False):
         temp_path = os.path.join(os.sep, 'tmp') + os.sep
         creds_fold = '/etc/'
 
+    # Initialize the creation count variable
+    _created = 0
+
     # Credentials folder
-    _created_c = 1 if os.path.exists(creds_fold) else os.makedirs(creds_fold)
+    if not os.path.exists(creds_fold):
+        os.makedirs(creds_fold)
+        _created += 1
+
     # Queries temp folder
     folds_q = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
-    _created_q = 1 if os.path.exists(folds_q) else os.makedirs(folds_q)
+    if not os.path.exists(folds_q):
+        os.makedirs(folds_q)
+        _created += 1
+
     # Data temp folder
     folds_d = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
-    _created_d = 1 if os.path.exists(folds_d) else os.makedirs(folds_d)
-
-    _created = 3 - _created_c - _created_q - _created_d
+    if not os.path.exists(folds_d):
+        os.makedirs(folds_d)
+        _created += 1
 
     # Return path if asked by user
     if output in ['tmp', 'temp']:
