@@ -49,6 +49,7 @@ The file follows the below structure:
    "DB_DATABASE": "",
    "__COMMENT_1__": "Email specific, send_email",
    "EMAIL_USER": "",
+   "EMAIL_SENDER": "",
    "EMAIL_PASSWORD": "",
    "EMAIL_SMTP": "smtp.gmail.com",
    "EMAIL_PORT": "587",
@@ -56,7 +57,7 @@ The file follows the below structure:
    "CLUSTER_NAME": "",
    "AWS_ACCESS_KEY_ID": "",
    "AWS_SECRET_ACCESS_KEY": "",
-   "REGION": "eu-west-1"
+   "REGION": "eu-east-3"
    }
 
 
@@ -116,6 +117,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
-

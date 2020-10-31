@@ -55,7 +55,7 @@ If the problem persists, please raise an `issue`_.
 What if I change an argument in the SQL query and run with :obj:`cache=True`?
 *****************************************************************************
 
-See `SQL FAQ 1 <../sql/sql.html#what-if-i-change-an-argument-in-the-sql-query-and-run-with-cache-true>`_.
+See `SQL FAQ 1 <../sql/sql.html#what-if-i-change-an-argument-in-the-sql-query-and-run-with-cache-true?orgn=pycof_faq>`_.
 
 
 ----
@@ -65,7 +65,7 @@ See `SQL FAQ 1 <../sql/sql.html#what-if-i-change-an-argument-in-the-sql-query-an
 How to use different credential sets?
 *************************************
 
-See `SQL FAQ 2 <../sql/sql.html#how-to-use-different-credential-sets>`_.
+See `SQL FAQ 2 <../sql/sql.html#how-to-use-different-credential-sets?orgn=pycof_faq>`_.
 
 
 ----
@@ -75,7 +75,7 @@ See `SQL FAQ 2 <../sql/sql.html#how-to-use-different-credential-sets>`_.
 How to execute a query from an SQL file?
 ****************************************
 
-See `SQL FAQ 3 <../sql/sql.html#how-to-execute-a-query-from-an-sql-file>`_.
+See `SQL FAQ 3 <../sql/sql.html#how-to-execute-a-query-from-an-sql-file?orgn=pycof_faq>`_.
 
 
 ----
@@ -85,7 +85,7 @@ See `SQL FAQ 3 <../sql/sql.html#how-to-execute-a-query-from-an-sql-file>`_.
 How can I load a .json file as a dictionnary?
 *********************************************
 
-See `Data FAQ 1 <../datamngt/datamngt.html#how-can-i-load-a-json-file-as-a-dictionnary>`_.
+See `Data FAQ 1 <../datamngt/datamngt.html#how-can-i-load-a-json-file-as-a-dictionnary?orgn=pycof_faq>`_.
 
 
 ----
@@ -94,7 +94,7 @@ See `Data FAQ 1 <../datamngt/datamngt.html#how-can-i-load-a-json-file-as-a-dicti
 How can I read .parquet files?
 ******************************
 
-See `Data FAQ 2 <../datamngt/datamngt.html#how-can-i-read-parquet-files>`_.
+See `Data FAQ 2 <../datamngt/datamngt.html#how-can-i-read-parquet-files?orgn=pycof_faq>`_.
 
 
 ----
@@ -104,7 +104,7 @@ See `Data FAQ 2 <../datamngt/datamngt.html#how-can-i-read-parquet-files>`_.
 How can I get my AWS credentials with boto3?
 ********************************************
 
-See `Data FAQ 3 <../datamngt/datamngt.html#how-can-i-get-my-aws-credentials-with-boto3>`_.
+See `Data FAQ 3 <../datamngt/datamngt.html#how-can-i-get-my-aws-credentials-with-boto3?orgn=pycof_faq>`_.
 
 
 ----
@@ -113,4 +113,4 @@ See `Data FAQ 3 <../datamngt/datamngt.html#how-can-i-get-my-aws-credentials-with
 .. _git: https://github.com/florianfelice/PYCOF/
 .. _issue: https://github.com/florianfelice/PYCOF/issues
 
-.. _statinf: https://www.florianfelice.com/statinf
+.. _statinf: https://www.florianfelice.com/statinf?orgn=pycof_faq

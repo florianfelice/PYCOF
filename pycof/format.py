@@ -38,7 +38,7 @@ def send_email(to, subject, body, cc='', credentials={}):
     """
     config = _get_config(credentials)
     msg = MIMEMultipart()
-    msg['From'] = config.get('EMAIL_USER')
+    msg['From'] = config.get('EMAIL_SENDER')
     msg['To'] = to
     msg['Cc'] = '' if cc == '' else cc
     msg['Subject'] = subject

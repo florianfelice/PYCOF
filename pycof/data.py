@@ -11,6 +11,7 @@ import xlrd
 import hashlib
 import pyarrow.parquet as pq
 from io import StringIO, BytesIO
+import urllib.request
 
 import re
 
@@ -152,8 +153,13 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = ' '.join(data)
     # HTML
     elif ext.lower() in ['html']:
-        with open(path) as f:
-            file = f.read()
+        if path.startswith('http'):
+            weburl = urllib.request.urlopen(path)
+            file = weburl.read().decode("utf-8")
+        else:
+            with open(path) as f:
+                file = f.read()
+
         # Parse the data
         for line in file.split('\n'):
             l_striped = line.strip()  # Removing trailing spaces
