@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycof",
-    version="1.1.41",
+    version="1.1.42",
     author="Florian Felice",
     author_email="florian.felice@outlook.com",
     description="A package for commonly used functions",
@@ -21,8 +21,7 @@ setuptools.setup(
           "tqdm>=4.35.0",
           "boto3>=1.9.219",
           "xlrd>=1.2.0",
-          "matplotlib>=3.1.1",
-          "pyarrow>=0.16.0"
+          "matplotlib>=3.1.1"
       ],
     classifiers=[
         "Programming Language :: Python :: 3",

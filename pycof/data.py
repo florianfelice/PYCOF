@@ -9,7 +9,6 @@ import math
 import json
 import xlrd
 import hashlib
-import pyarrow.parquet as pq
 from io import StringIO, BytesIO
 import urllib.request
 
@@ -211,9 +210,14 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = pd.read_parquet(path)
         elif type(engine) == str:
             if engine.lower() in ['py', 'pa', 'pyarrow']:
+                import pyarrow.parquet as pq
                 dataset = pq.ParquetDataset(path, **kwargs)
                 table = dataset.read()
                 data = table.to_pandas()
+            elif engine.lower() in ['fp', 'fastparquet']:
+                from fastparquet import ParquetFile
+                dataset = ParquetFile(path, **kwargs)
+                table = dataset.to_pandas()
             else:
                 raise ValueError('Engine value not allowed')
         else:
