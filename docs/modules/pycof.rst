@@ -34,8 +34,8 @@ The library is supported on Windows, Linux and MacOS.
 Setup
 =====
 
-The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will, by default, look for the credentials located in :obj:`/etc/config.json`.
-On Windows, save the config file as :obj:`C:/Users/<username>/config.json`.
+The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will, by default, look for the credentials located in :obj:`/etc/.pycof/config.json`.
+On Windows, save the config file as :obj:`C:/Users/<username>/.pycof/config.json`.
 
 The file follows the below structure:
 
@@ -57,7 +57,11 @@ The file follows the below structure:
    "CLUSTER_NAME": "",
    "AWS_ACCESS_KEY_ID": "",
    "AWS_SECRET_ACCESS_KEY": "",
-   "REGION": "eu-east-3"
+   "REGION": "eu-east-3",
+   "__COMMENT_3__": "SSH specific"
+   "SSH_USER": "",
+   "SSH_KEY": "",
+   "SSH_PASSWORD": ""
    }
 
 
@@ -65,7 +69,7 @@ On Unix based system, run:
 
 .. code-block:: console
 
-   sudo nano /etc/config.json
+   sudo nano /etc/.pycof/config.json
 
 and paste the above json after filling the empty strings (pre-filled values are standard default values).
 

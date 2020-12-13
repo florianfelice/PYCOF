@@ -20,30 +20,44 @@ def _pycof_folders(output=None, verbose=False):
     # Define the root folder depending on the OS
     if sys.platform in ['win32', 'win64', 'cygwin', 'msys']:
         temp_path = os.environ['TEMP'] + os.sep
-        creds_fold = os.path.join(os.environ['USERPROFILE'], '.pycof')  + os.sep
+        home = os.environ['USERPROFILE']
+        creds_fold = os.path.join(home, '.pycof')  + os.sep
     else:
         temp_path = os.path.join(os.sep, 'tmp') + os.sep
-        creds_fold = '/etc/'
+        creds_fold = os.path.join(os.sep, 'etc', '.pycof') + os.sep
+        home = os.environ['HOME']
 
     # Initialize the creation count variable
     _created = 0
 
     # Credentials folder
     if not os.path.exists(creds_fold):
-        os.makedirs(creds_fold)
-        _created += 1
+        try:
+            os.makedirs(creds_fold)
+            _created += 1
+        except PermissionError as err:
+            raise PermissionError(f"""Could not create the PYCOF config folder, permission denied: {creds_fold}.
+                    Please create folder with: sudo mkdir {creds_fold} or run your script with super-user.""")
 
     # Queries temp folder
     folds_q = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
     if not os.path.exists(folds_q):
-        os.makedirs(folds_q)
-        _created += 1
+        try:
+            os.makedirs(folds_q)
+            _created += 1
+        except PermissionError as err:
+            raise PermissionError(f"""Could not create the PYCOF temp folder, permission denied: {folds_q}.
+                    Please create folder with: sudo mkdir {folds_q} or run your script with super-user.""")
 
     # Data temp folder
     folds_d = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
     if not os.path.exists(folds_d):
-        os.makedirs(folds_d)
-        _created += 1
+        try:
+            os.makedirs(folds_d)
+            _created += 1
+        except PermissionError as err:
+            raise PermissionError(f"""Could not create the PYCOF temp data folder, permission denied: {folds_d}.
+                    Please create folder with: sudo mkdir {folds_d} or run your script with super-user.""")
 
     # Return path if asked by user
     if output in ['tmp', 'temp']:
@@ -54,6 +68,8 @@ def _pycof_folders(output=None, verbose=False):
         return folds_q
     elif output == 'data':
         return folds_d
+    elif output == 'home':
+        return home
     elif verbose:
         print(f'PYCOF folder created: {_created}')
 
@@ -68,7 +84,8 @@ def _get_config(credentials):
         if '/' in credentials:
             path = credentials
         else:
-            path = os.path.join(_pycof_folders(output='creds'), credentials)
+            creds = credentials if credentials.endswith('.json') else credentials + '.json'
+            path = os.path.join(_pycof_folders(output='creds'), creds)
     elif (type(credentials) == dict) & (credentials == {}):
         path = os.path.join(_pycof_folders(output='creds'), 'config.json')
     else:
@@ -79,8 +96,12 @@ def _get_config(credentials):
     if path == '':
         config = credentials
     else:
-        with open(path) as config_file:
-            config = json.load(config_file)
+        try:
+            with open(path) as config_file:
+                config = json.load(config_file)
+        except Exception:
+            raise ValueError("""Could not load config file. 
+                    Note that from version 1.2.0, config file location has changed. Make sure your file is in {}""".format(_pycof_folders('creds')))
 
     return config
 

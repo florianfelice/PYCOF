@@ -10,6 +10,66 @@ Library versions in between are used to fix bugs and implement improvement sugge
 
 ----
 
+********************************************************************************************
+1.2.0 - December 13, 2020 - SSH tunnels supported in :py:meth:`pycof.sql.remote_execute_sql`
+********************************************************************************************
+
+The module :py:meth:`pycof.sql.remote_execute_sql` now supports remote connections with SSH tunneling thanks to the argument :obj:`connection='SSH'`.
+Supported for both MySQL and SQLite databases, users will be able to access databases on servers that only expose port 22.
+This will allow more secure connections.
+If argument :obj:`connection='SSH'` is called but the config file does not have neither a value for :obj:`SSH_KEY` nor for :obj:`SSH_PASSWORD`,
+the function will look for the default SSH location (:obj:`/home/user/.ssh/id_rsa` on Linux/MacOS or :obj:`'C://Users/<username>/.ssh/id_rsa` on Windows).
+
+Also, both functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.data.f_read` can consume argument :obj:`credentials` without '.json' extension.
+See `SQL FAQ 6 <../sql/sql.html?orgn=pycof_faq#how-to-query-a-database-with-ssh-tunneling>`_ for more details.
+
+.. warning::
+
+    Note that from version 1.2.0, the pycof credentials folder for Linux and MacOS will need to be :obj:`/etc/.pycof`.
+    You can then move you config file with the command: :obj:`sudo mv /etc/config.json /etc/.pycof/config.json`.
+
+The adapted :obj:`config.json` structure is:
+
+.. code-block:: python
+
+   {
+   "DB_USER": "",
+   "DB_PASSWORD": "",
+   "DB_HOST": "",
+   "DB_PORT": "3306",
+   "DB_DATABASE": "",
+   "SSH_USER": ""
+   }
+
+Other arguments such as :obj:`SSH_KEY` and :obj:`SSH_PASSWORD` are optional provided that the SSH key is stored in the default folder.
+
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    pc.remote_execute_sql('my_example.sql', connection='SSH')
+
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.2.0
+
+
+See more details: :py:meth:`pycof.sql.remote_execute_sql`
+
+
+----
+
 
 ****************************************************************************************
 1.1.37 - September 30, 2020 - SQLite database on :py:meth:`pycof.sql.remote_execute_sql`
@@ -120,7 +180,7 @@ Users still have the possibility to provide an integer representing file age in 
 
 :py:meth:`pycof.sql.remote_execute_sql` also now accepts a path for :obj:`sql_query`.
 The extension needs to be :obj:`.sql`.
-The path will then be passed to :py:meth:`pycof.f_read` to recover the SQL query.
+The path will then be passed to :py:meth:`pycof.data.f_read` to recover the SQL query.
 
 
 .. warning::
@@ -154,11 +214,11 @@ See more details: :py:meth:`pycof.sql.remote_execute_sql`
 ----
 
 
-*****************************************************************************
-1.1.26 - Mar 20, 2020 - :py:meth:`pycof.f_read` now supports json and parquet
-*****************************************************************************
+**********************************************************************************
+1.1.26 - Mar 20, 2020 - :py:meth:`pycof.data.f_read` now supports json and parquet
+**********************************************************************************
 
-We extended the :py:meth:`pycof.f_read` extension capabilities to include :obj:`json` and :obj:`parquet` formats.
+We extended the :py:meth:`pycof.data.f_read` extension capabilities to include :obj:`json` and :obj:`parquet` formats.
 It aims at loading files to be used as DataFrame or SQL files.
 The formats accepted now are: :obj:`csv`, :obj:`txt`, :obj:`xlsx`, :obj:`sql`, :obj:`json`, :obj:`parquet`, :obj:`js`, :obj:`html`.
 
@@ -186,15 +246,15 @@ How to install it?
     pip3 install pycof==1.1.24
 
 
-See more details: :py:meth:`pycof.f_read`
+See more details: :py:meth:`pycof.data.f_read`
 
 
 ----
 
 
-************************************************************
-1.1.21 - Feb 21, 2020 - New function :py:meth:`pycof.f_read`
-************************************************************
+*****************************************************************
+1.1.21 - Feb 21, 2020 - New function :py:meth:`pycof.data.f_read`
+*****************************************************************
 
 PYCOF now provides a function to load files without having to care about the extension.
 It aims at loading files to be used as DataFrame or SQL files.
@@ -221,7 +281,7 @@ How to install it?
     pip3 install pycof==1.1.21
 
 
-See more details: :py:meth:`pycof.f_read`
+See more details: :py:meth:`pycof.data.f_read`
 
 
 ----

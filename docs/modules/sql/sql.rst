@@ -39,7 +39,11 @@ The file follows the below structure:
    "CLUSTER_NAME": "",
    "AWS_ACCESS_KEY_ID": "",
    "AWS_SECRET_ACCESS_KEY": "",
-   "REGION": "eu-west-1"
+   "REGION": "eu-west-1",
+   "__COMMENT_3__": "SSH specific"
+   "SSH_USER": "",
+   "SSH_KEY": "",
+   "SSH_PASSWORD": ""
    }
 
 
@@ -47,13 +51,13 @@ On Unix based system, run:
 
 .. code-block:: console
 
-   sudo nano /etc/config.json
+   sudo nano /etc/.pycof/config.json
 
 and paste the above json after filling the empty strings (pre-filled values are standard default values).
 
 **Reminder:** To save the file, with nano press :obj:`CTRL + O`, confirm with :obj:`b` then :obj:`CTRL + X` to exit.
 
-On Windows, use the path :obj:`C:/Windows/config.json`.
+On Windows, use the path :obj:`C:/Users/<username>/.pycof/config.json`.
 
 
 Pass your credentials in your code
@@ -73,7 +77,7 @@ Example
 Standard :obj:`SELECT`
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The function executes a given SQL query with credentials automatically pulled from :obj:`/etc/config.json`.
+The function executes a given SQL query with credentials automatically pulled from :obj:`/etc/.pycof/config.json`.
 To execute an SQL query, follow the below steps:
 
 .. code-block:: python
@@ -85,6 +89,22 @@ To execute an SQL query, follow the below steps:
 
     ## The function will return a pandas dataframe
     df = pc.remote_execute_sql(sql)
+
+
+:obj:`INSERT` data
+^^^^^^^^^^^^^^^^^^
+
+You can insert the content of a :obj:`pandas.DataFrame` into an SQL table.
+To execute an insert query, follow the below steps:
+
+.. code-block:: python
+
+    from pycof as pc
+
+    ## The function will insert pandas dataframe in the specified table
+    pc.remote_execute_sql(df, table='SCHEMA.TABLE')
+
+You only need to ensure you SQL user has write access on the table and to specified the targeted table.
 
 
 ----
@@ -107,12 +127,12 @@ You can then safely use caching without worrying about the eventual evolution of
 
 The credentials argument can take the path or json file name into account to load them.
 
-For instance, you can have multiple credential files such as :obj:`/etc/config.json`, :obj:`/etc/MyNewHost.json` and :obj:`/home/OtherHost.json`.
+For instance, you can have multiple credential files such as :obj:`/etc/.pycof/config.json`, :obj:`/etc/.pycof/MyNewHost.json` and :obj:`/home/.pycof/OtherHost.json`.
 In :py:meth:`pycof.sql.remote_execute_sql` you can play with the credentials argument.
 
-    * To use the :obj:`/etc/config.json` credentials you can use the default arguments by not providing anything.
-    * To use :obj:`/etc/MyNewHost.json` you can either pass :obj:`credentials='MyNewHost.json'` or the whole path to use them.
-    * To use :obj:`/home/OtherHost.json` you need to pass the whole path.
+    * To use the :obj:`/etc/.pycof/config.json` credentials you can use the default arguments by not providing anything.
+    * To use :obj:`/etc/.pycof/MyNewHost.json` you can either pass :obj:`credentials='MyNewHost'` or :obj:`credentials='MyNewHost.json'` or the whole path to use them.
+    * To use :obj:`/home/.pycof/OtherHost.json` you need to pass the whole path.
 
 Example:
 
@@ -124,7 +144,7 @@ Example:
     sql = "SELECT * FROM SCHEMA.TABLE LIMIT 10"
 
     ## Run the query
-    df = pc.remote_execute_sql(sql, credentials='MyNewHost.json')
+    df = pc.remote_execute_sql(sql, credentials='MyNewHost')
     df2 = pc.remote_execute_sql(sql, credentials='/home/OtherHost.json')
 
 
@@ -189,7 +209,7 @@ You can then execute your query:
 
 The function :py:meth:`pycof.sql.remote_execute_sql` can take into account `IAM <https://aws.amazon.com/iam/features/manage-users/>`_ user's credentials.
 You need to ensure that your credentials file :obj:`/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
-The only argument to change when calling the function is to set :obj:`useIAM=True`.
+The only argument to change when calling the function is to set :obj:`connection='IAM'`.
 
 The function will then use the `AWS access and secret keys <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html>`_ to ask AWS to provide the user name and password to connect to the cluster.
 This is a much safer approach to connect to a Redshift cluster than using direct cluster's credentials.
@@ -208,7 +228,7 @@ Example:
     sql = "SELECT * FROM SCHEMA.TABLE LIMIT 10"
 
     ## Run the query
-    df = pc.remote_execute_sql(sql, useIAM=True)
+    df = pc.remote_execute_sql(sql, connection='IAM')
 
 
 5 - How to cache the data?
@@ -224,3 +244,21 @@ Example:
 The cache argument will allow you to save time for the next execution of the same SQL query.
 It will then load the cached data and not execute the whole SQL query if the age of the last execution is younger than the :obj:`cache` argument.
 
+
+6 - How to query a database with SSH tunneling?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:py:meth:`pycof.sql.remote_execute_sql` allows SSH tunneling with the argument :obj:`connection='SSH'`.
+The only additional requirement will be in the :obj:`/etc/.pycof/config.json` config file to specify the SSH user name.
+
+If no SSH key path nor password is provided, the function will use the default SSH path:
+usually :obj:`/home/user/.ssh/id_rsa` on Linux/MacOS or :obj:`'C://Users/<username>/.ssh/id_rsa` on Windows).
+
+Just make sure you private key with name :obj:`id_rsa` is storage in that folder.
+You can also specify the ssh private key location or user password.
+We however recommend to work with SSH key pairs for more secure connections.
+
+
+.. code-block:: python
+
+    # User SSH tunnel
+    df = pc.remote_execute_sql(sql, connection='SSH')

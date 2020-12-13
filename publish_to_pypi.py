@@ -83,7 +83,7 @@ os.system(f'python3 {lib_path}/setup_new.py sdist bdist_wheel')
 
 
 # Load pypi credentials
-with open('/etc/config.json') as config_file:
+with open('/etc/.pycof/config.json') as config_file:
     config = json.load(config_file)
 
 user = config.get('PYPI_USER')
