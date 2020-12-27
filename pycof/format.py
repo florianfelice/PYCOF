@@ -261,7 +261,7 @@ def str2bool(value):
 class GoogleCalendar:
     def __init__(self, timezone='Europe/Paris', scopes=['https://www.googleapis.com/auth/calendar.readonly']):
         """Get all available events on a Google Calendar.
-        The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :python:`/etc/.pycof/google.json`.
+        The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
 
         :param timezone: Time zone to transform dates, defaults to 'Europe/Paris'.
         :type timezone: :obj:`str`, optional
