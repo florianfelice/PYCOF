@@ -58,7 +58,7 @@ The file follows the below structure:
    "AWS_ACCESS_KEY_ID": "",
    "AWS_SECRET_ACCESS_KEY": "",
    "REGION": "eu-east-3",
-   "__COMMENT_3__": "SSH specific"
+   "__COMMENT_3__": "SSH specific",
    "SSH_USER": "",
    "SSH_KEY": "",
    "SSH_PASSWORD": ""

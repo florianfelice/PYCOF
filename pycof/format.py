@@ -3,18 +3,25 @@ import sys
 import getpass
 import warnings
 
+import pickle
 import re
 import math
+import pandas as pd
 
 from tqdm import tqdm
 import datetime
+from dateparser import parse
+import pytz
 
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 
 from .sqlhelper import _get_config, _get_credentials
-from .misc import file_age, verbose_display
+from .misc import file_age, verbose_display, _pycof_folders
 
 
 #######################################################################################################################
@@ -246,3 +253,139 @@ def str2bool(value):
         * :obj:`bool`: Returns either True or False.
     """
     return str(value).lower() in ("yes", "y", "true", "t", "1")
+
+
+#######################################################################################################################
+
+# Getting Google Calendar events
+class GoogleCalendar:
+    def __init__(self, timezone='Europe/Paris', scopes=['https://www.googleapis.com/auth/calendar.readonly']):
+        """Get all available events on a Google Calendar.
+        The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :python:`/etc/.pycof/google.json`.
+
+        :param timezone: Time zone to transform dates, defaults to 'Europe/Paris'.
+        :type timezone: :obj:`str`, optional
+        :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://www.googleapis.com/auth/calendar.readonly'].
+        :type scopes: :obj:`list`, optional
+        """
+        self.timezone = pytz.timezone(timezone)
+        self.scopes = scopes
+
+    def _get_creds(self):
+        """Retreive Google credentials.
+
+        :return: Google calendar credentials.
+        :rtype: :obj:`google_auth_oauthlib`
+        """
+        creds = None
+        # The file token.pickle stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        token_path = os.path.join(_pycof_folders('data'), 'token.pickle')
+        creds_path = os.path.join(_pycof_folders('creds'), 'google.json')
+
+        if os.path.exists(token_path):
+            with open(token_path, 'rb') as token:
+                creds = pickle.load(token)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.scopes)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open(token_path, 'wb') as token:
+                pickle.dump(creds, token)
+        return creds
+
+    def _events_to_df(self, events):
+        """Transform events list into pandas DataFrame for easy manipulation and filtering
+
+        :param events: List containing all events.
+        :type events: :obj:`list`
+        :return: Data Frame with all retreived events.
+        :rtype: :obj:`pandas.DataFrame`
+        """
+        events_df = pd.DataFrame()
+
+        if not events:
+            return events_df
+        else:
+            events_df['StartDate'] = [parse(event['start'].get('dateTime', event['start'].get('date'))) for event in events]
+            events_df['EndDate'] = [parse(event['end'].get('dateTime', event['end'].get('date'))) for event in events]
+            events_df['EventName'] = [event['summary'] for event in events]
+            events_df['EventOrganizer'] = [event['creator']['email'] for event in events]
+            events_df['EventCreationDate'] = [parse(event['created']).astimezone(self.timezone) for event in events]
+
+            return events_df
+
+    def today_events(self, calendar='primary', singleEvents=True, orderBy='startTime', *args):
+        """Retreive all events for current date. See https://developers.google.com/calendar/v3/reference/events/list for details for arguments.
+
+        :param calendar: ID of the targeted calendar. Use the function :py:meth:`get_calendars` to find more calendars, defaults to 'primary'.
+        :type calendar: :obj:`str`, optional
+        :param singleEvents: Whether to expand recurring events into instances and only return single one-off events and instances of recurring events, but not the underlying recurring events themselves, defaults to True.
+        :type singleEvents: :obj:`bool`, optional
+        :param orderBy: The order of the events returned in the result, defaults to 'startTime'.
+        :type orderBy: :obj:`str`, optional
+
+        :return: Data Frame with all events for today.
+        :rtype: :obj:`pandas.DataFrame`
+        """
+        # Call the Calendar API
+        service = build('calendar', 'v3', credentials=self._get_creds())
+
+        # print(service.calendarList().list().execute())
+
+        # Set start and end date
+        now = datetime.datetime.now().astimezone(self.timezone)
+        endtime = now.replace(hour=23)
+
+        events_result = service.events().list(calendarId=calendar, timeMin=now.isoformat(),
+                                              timeMax=endtime.isoformat(),
+                                              singleEvents=singleEvents,
+                                              orderBy=orderBy, *args).execute()
+        return self._events_to_df(events_result.get('items', []))
+
+    def next_events(self, calendar='primary', maxResults=None, endTime=None, singleEvents=True, orderBy='startTime', *args):
+        """Retreive next events. See https://developers.google.com/calendar/v3/reference/events/list for details for arguments.
+
+        :param calendar: ID of the targeted calendar. Use the function :py:meth:`get_calendars` to find more calendars, defaults to 'primary'.
+        :type calendar: :obj:`str`, optional
+        :param maxResults: Number of future events to retreive, defaults to None.
+        :type maxResults: :obj:`int`, optional
+        :param endTime: Maximum date for the future events, defaults to None
+        :type endTime: :obj:`datetime.datetime`, optional
+        :param singleEvents: Whether to expand recurring events into instances and only return single one-off events and instances of recurring events, but not the underlying recurring events themselves, defaults to True.
+        :type singleEvents: :obj:`bool`, optional
+        :param orderBy: The order of the events returned in the result, defaults to 'startTime'.
+        :type orderBy: :obj:`str`, optional
+
+        :return: Data Frame with future events.
+        :rtype: :obj:`pandas.DataFrame`
+        """
+        # Call the Calendar API
+        service = build('calendar', 'v3', credentials=self._get_creds())
+
+        # Set start and end date
+        now = datetime.datetime.now().astimezone(self.timezone)
+
+        endtime = parse(endTime).astimezone(self.timezone).isoformat() if endTime else None
+
+        events_result = service.events().list(calendarId=calendar, timeMin=now.isoformat(),
+                                              timeMax=endtime,
+                                              maxResults=maxResults,
+                                              singleEvents=singleEvents,
+                                              orderBy=orderBy, *args).execute()
+        return self._events_to_df(events_result.get('items', []))
+
+    def get_calendars(self):
+        """Get list of all available calendars.
+
+        :return: List of all available calendars.
+        :rtype: :obj:`list`
+        """
+        service = build('calendar', 'v3', credentials=self._get_creds())
+
+        return service.calendarList().list().execute()
