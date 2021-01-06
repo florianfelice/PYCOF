@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycof",
-    version="1.2.2",
+    version="1.2.3",
     author="Florian Felice",
     author_email="florian.felice@outlook.com",
     description="A package for commonly used functions",
@@ -27,8 +27,7 @@ setuptools.setup(
           "google-api-python-client>=1.12.8",
           "google-auth-httplib2>=0.0.4",
           "google-auth-oauthlib>=0.4.2",
-          "google-auth>=1.16.0",
-          "google-auth>=1.24.1",
+          "google-auth>=1.24.0",
           "httplib2>=0.18.1"
       ],
     classifiers=[
