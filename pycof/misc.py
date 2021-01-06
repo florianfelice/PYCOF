@@ -137,8 +137,8 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
         # If S3, get credentials
         config = _get_config(credentials)
         if config.get("AWS_SECRET_ACCESS_KEY") in [None, 'None', '']:
-            s3 = boto3.client("s3", profile_name='default')
-            s3_resource = boto3.resource("s3", profile_name='default')
+            s3 = boto3.client("s3")
+            s3_resource = boto3.resource("s3")
         else:
             s3 = boto3.client("s3", aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
                               aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),

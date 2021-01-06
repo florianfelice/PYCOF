@@ -47,6 +47,24 @@ Find more details on the `Python documentation <https://docs.python.org/3/using/
 If the problem persists, please raise an `issue`_.
 
 
+----
+
+
+***************************************************************
+I am having issues with the Google dependencies, how can I fix?
+***************************************************************
+
+Usually, the main issue dependencies come from requirements not met.
+We recommend to update the main dependencies by:
+
+.. code:: bash
+
+    pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+
+Check the `Google API documentation <https://developers.google.com/calendar/quickstart/python>`_ for more info.
+
+
 
 ----
 
