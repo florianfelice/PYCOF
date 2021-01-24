@@ -13,6 +13,13 @@ import datetime
 from dateparser import parse
 import pytz
 
+import time
+import imaplib
+import email
+import traceback
+import dateparser
+from dateutil import tz
+
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -29,15 +36,34 @@ from .misc import file_age, verbose_display, _pycof_folders
 # Send an Email
 def send_email(to, subject, body, cc='', credentials={}):
     """Simplified function to send emails.
-    Will look at the credentials at :obj:`/etc/config.json`. User can also pass a dictionnary for credentials.
+    Will look at the credentials at :obj:`/etc/.pycof/config.json`. User can also pass a dictionnary for credentials.
 
     :Parameters:
         * **to** (:obj:`str`): Recipient of the email.
         * **subject** (:obj:`str`): Subject of the email.
         * **body** (:obj:`str`): Content of the email to be send.
         * **cc** (:obj:`str`): Email address to be copied (defaults None).
-        * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from :obj:`/etc/` (defaults {}).
+        * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from :obj:`/etc/.pycof/` (defaults {}).
         * **verbose** (:obj:`bool`): Displays if the email was sent successfully (defaults False).
+
+    :Configuration: The function requires the below arguments in the configuration file.
+
+        * :obj:`EMAIL_USER`: Email address from which we want to send the email.
+        * :obj:`EMAIL_SENDER`: Name to display for the sender.
+        * :obj:`EMAIL_PASSWORD`: Password for authentication.
+        * :obj:`EMAIL_SMTP`: SMTP host for connection. Default is smtp.gmail.com for Google.
+        * :obj:`EMAIL_PORT`: Port for authentication.
+
+        .. code-block:: python
+
+            {
+            "EMAIL_USER": "",
+            "EMAIL_SENDER": "",
+            "EMAIL_PASSWORD": "",
+            "EMAIL_SMTP": "smtp.gmail.com",
+            "EMAIL_PORT": "587"
+            }
+
 
     :Example:
         >>> content = "This is a test"
@@ -267,6 +293,10 @@ class GoogleCalendar:
         :type timezone: :obj:`str`, optional
         :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://www.googleapis.com/auth/calendar.readonly'].
         :type scopes: :obj:`list`, optional
+
+        :Configuration: The function requires a configuration file stored at :obj:`/etc/.pycof/google.json`.
+            This file can be generated at https://developers.google.com/calendar/quickstart/python.
+            User will need to enable the Google Calendar API on the account from Step 1.
         """
         self.timezone = pytz.timezone(timezone)
         self.scopes = scopes
@@ -389,3 +419,100 @@ class GoogleCalendar:
         service = build('calendar', 'v3', credentials=self._get_creds())
 
         return service.calendarList().list().execute()
+
+
+def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
+    """Get latest emails from your address.
+
+    :param nb_email: Number of emails to retreive, defaults to 1.
+    :type nb_email: :obj:`int`, optional
+    :param email_address: Email address to use, defaults to '' and uses :obj:`EMAIL_USER` from config file.
+    :type email_address: :obj:`str`, optional
+    :param port: Port for IMAP, defaults to 993 for Gmail.
+    :type port: :obj:`int`, optional
+    :param credentials: Credentials to use. See Setup, defaults to {}.
+    :type credentials: :obj:`dict`, optional
+
+    :Configuration: The function requires the below arguments in the configuration file.
+
+        * :obj:`EMAIL_USER`: Email address from which we want to retreive emails. Similar argument as :py:meth:`pycof.format.send_email`.
+        * :obj:`EMAIL_PASSWORD`: Password for authentication. Similar argument as :py:meth:`pycof.format.send_email`.
+        * :obj:`EMAIL_IMAP`: IMAP host for connection. Default is imap.gmail.com for Google.
+
+        .. code-block:: python
+
+            {
+            "EMAIL_USER": "",
+            "EMAIL_PASSWORD": "",
+            "EMAIL_IMAP": "imap.gmail.com"
+            }
+
+    :example:
+        >>> pycof.GetEmails(2)
+        ... +----------------------------+-----------------+----------------+----------------+
+        ... |                       Date |            From |        Subject |             To |
+        ... +----------------------------+-----------------+----------------+----------------+
+        ... |  2021-01-01 04:00:03+01:00 | test@domain.com |          Testo |  me@domain.com |
+        ... |  2021-01-01 03:14:09+01:00 | test@domain.com |   Another test |  me@domain.com |
+        ... +----------------------------+-----------------+----------------+----------------+
+
+    :return: Data frame with last emails.
+    :rtype: :obj:`pandas.DataFrame`
+    """
+    # Getting configs
+    config = _get_config(credentials)
+
+    FROM_EMAIL = email_address if email_address else config.get('EMAIL_USER')
+    FROM_PWD = config.get('EMAIL_PASSWORD')
+    smtp_conf = config.get('EMAIL_SMTP')
+    SMTP_SERVER = config.get('EMAIL_IMAP') if config.get('EMAIL_IMAP') else smtp_conf.replace('smtp', 'imap')
+    SMTP_PORT = port
+
+    try:
+        mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+        mail.login(FROM_EMAIL, FROM_PWD)
+        mail.select('inbox')
+
+        type, data = mail.search(None, 'ALL')
+        mail_ids = data[0]
+        id_list = mail_ids.split()
+        first_email_id = int(id_list[0])
+        latest_email_id = int(id_list[-1])
+
+        df = pd.DataFrame()
+        for num in range(latest_email_id, latest_email_id - nb_email, -1):
+            typ, data = mail.fetch(str(num), '(RFC822)')
+            raw_email = data[0][1]  # converts byte literal to string removing b''
+            raw_email_string = raw_email.decode('utf-8')
+            email_message = email.message_from_string(raw_email_string)  # downloading attachments
+            # Get email content
+            msg = email.message_from_string(str(raw_email, 'utf-8'))
+            _subj = msg['subject']
+            _from = msg['From']
+            _to = msg['To']
+            ddt = dateparser.parse(msg['Date'].strip())
+            if ddt is None:
+                ddt = dateparser.parse(msg['Date'].replace('00 (PST)', ' PST').split(',')[1])
+            _date = ddt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzlocal())
+            for_df = {'From': _from, 'Subject': _subj, 'To': _to, 'Date': _date}
+
+            # Get email attachments
+            i = 1
+            for part in email_message.walk():
+                fileName = part.get_filename()
+                if bool(fileName):
+                    filePath = os.path.join(_pycof_folders('data'), fileName)
+                    for_df.update({f'Attachment {i}': filePath})
+                    i += 1
+                    if not os.path.isfile(filePath):
+                        fp = open(filePath, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                        subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
+                        print('Downloaded "{file}" from email titled "{subject}" with UID .'.format(file=fileName, subject=subject))
+
+            df = df.append(for_df, ignore_index=True)
+        return df
+    except Exception as e:
+        traceback.print_exc()
+        print(str(e))

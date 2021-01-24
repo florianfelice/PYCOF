@@ -7,6 +7,49 @@ This section aims at showing the latest release of the library.
 We show most important releases that included new features.
 Library versions in between are used to fix bugs and implement improvement suggested by users' feedback.
 
+----
+
+***********************************************************************
+1.2.4 - January 24, 2021 - Emails and Google Calendar are now supported
+***********************************************************************
+
+A new module :py:meth:`pycof.format.GoogleCalendar` allows users to retreive events from Google Calendar.
+The modules contains a fonction :py:meth:`pycof.format.GoogleCalendar.today_events` to get all events of the running day.
+The user can also use :py:meth:`pycof.format.GoogleCalendar.next_events` to find the next events (the number of events is passed in the arguments).
+
+Another module :py:meth:`pycof.format.GetEmails` allows users to retreive the most recent emails from a selected address.
+Users can retreive a fixed number of emails and their attachments.
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    calendar = pc.GoogleCalendar()
+    # Get today events
+    todays = calendar.today_events(calendar='primary')
+    # Get 10 next events
+    next10 = calendar.next_events(calendar='primary', maxResults=10)
+
+    # Retreive last 10 emails
+    pycof.GetEmails(10)
+
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.2.4
+
+
+See more details: :py:meth:`pycof.format.GoogleCalendar` / :py:meth:`pycof.format.GetEmails`
+
 
 ----
 

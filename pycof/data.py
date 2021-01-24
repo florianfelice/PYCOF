@@ -38,8 +38,20 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         * **sep** (:obj:`str`): Columns delimiter for pd.read_csv (defaults ',').
         * **sheet_name** (:obj:`str`): Tab column to load when reading Excel files (defaults 0).
         * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or the function from your preferred library (defaults 'pyarrow').
-        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
+        * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/.pycof' (defaults {}).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to the engine or values to be formated in the file to load.
+
+    :Configuration: The function requires the below arguments in the configuration file.
+
+        * :obj:`AWS_ACCESS_KEY_ID`: AWS access key, can remain empty if an IAM role is assign to the host.
+        * :obj:`AWS_SECRET_ACCESS_KEY`: AWS secret key, can remain empty if an IAM role is assign to the host.
+
+        .. code-block:: python
+
+            {
+            "AWS_ACCESS_KEY_ID": "",
+            "AWS_SECRET_ACCESS_KEY": ""
+            }
 
     :Example:
 
@@ -115,10 +127,11 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
                     # Otherwise, we update the cache
                     verbose_display('Updating data in cache', verbose)
                     for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
-                        if obj.key == folder_path:
+                        if (obj.key == folder_path) or (not any(e in obj.key for e in ['.parquet', '.parq', '.csv', '.json', '.txt'])):
                             continue
-                        s3bucket.download_file(obj.key, path + '/' + obj.key.split('/')[-1])
-                        ext = obj.key.split('.')[-1]
+                        else:
+                            s3bucket.download_file(obj.key, path + '/' + obj.key.split('/')[-1])
+                            ext = obj.key.split('.')[-1]
             else:
                 # If the file is not in the cache, we download it
                 verbose_display('Downloading and caching data', verbose)

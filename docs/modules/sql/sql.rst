@@ -251,7 +251,7 @@ It will then load the cached data and not execute the whole SQL query if the age
 The only additional requirement will be in the :obj:`/etc/.pycof/config.json` config file to specify the SSH user name.
 
 If no SSH key path nor password is provided, the function will use the default SSH path:
-usually :obj:`/home/user/.ssh/id_rsa` on Linux/MacOS or :obj:`'C://Users/<username>/.ssh/id_rsa` on Windows).
+usually :obj:`/home/<username>/.ssh/id_rsa` on Linux/MacOS or :obj:`'C://Users/<username>/.ssh/id_rsa` on Windows.
 
 Just make sure you private key with name :obj:`id_rsa` is storage in that folder.
 You can also specify the ssh private key location or user password.

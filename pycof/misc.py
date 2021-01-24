@@ -20,12 +20,12 @@ def _pycof_folders(output=None, verbose=False):
     # Define the root folder depending on the OS
     if sys.platform in ['win32', 'win64', 'cygwin', 'msys']:
         temp_path = os.environ['TEMP'] + os.sep
-        home = os.environ['USERPROFILE']
+        home = os.path.expand('~')
         creds_fold = os.path.join(home, '.pycof')  + os.sep
     else:
         temp_path = os.path.join(os.sep, 'tmp') + os.sep
         creds_fold = os.path.join(os.sep, 'etc', '.pycof') + os.sep
-        home = os.environ['HOME']
+        home = os.path.expanduser('~')
 
     # Initialize the creation count variable
     _created = 0
@@ -77,7 +77,7 @@ def _pycof_folders(output=None, verbose=False):
 # #######################################################################################################################
 # Get config file
 
-def _get_config(credentials):
+def _get_config(credentials={}):
     # ==========
     # Parse credentials argument
     if type(credentials) == str:
