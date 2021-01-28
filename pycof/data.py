@@ -11,6 +11,7 @@ import xlrd
 import hashlib
 from io import StringIO, BytesIO
 import urllib.request
+from types import SimpleNamespace
 
 import re
 
@@ -63,12 +64,19 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
     :Returns:
         * :obj:`pandas.DataFrame`: Data frame a string from file read.
     """
+    # Initialize ext var
     ext = path.split('.')[-1] if extension is None else extension
+    # Initialize orgn var
+    if path.startswith('s3://'):
+        orgn = 'S3'
+    elif path.startswith('http'):
+        orgn = 'http'
+    else:
+        orgn = 'other'
+    # Initialize data var
     data = []
 
-    useIAM = path.startswith('s3://')
-
-    if useIAM:
+    if orgn == 'S3':
         config = _get_config(credentials)
         if config.get("AWS_SECRET_ACCESS_KEY") in [None, 'None', '']:
             try:
@@ -151,8 +159,11 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
     # SQL
     elif ext.lower() in ['sql']:
-        with open(path) as f:
-            file = f.read()
+        if type(path) == BytesIO:
+            file = path.read().decode()
+        else:
+            with open(path) as f:
+                file = f.read()
         for line in file.split('\n'):  # Parse the data
             l_striped = line.strip()  # Removing trailing spaces
             if parse:
@@ -165,7 +176,9 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = ' '.join(data)
     # HTML
     elif ext.lower() in ['html']:
-        if path.startswith('http'):
+        if type(path) == BytesIO:
+            file = path.read().decode()
+        elif orgn == 'http':
             weburl = urllib.request.urlopen(path)
             file = weburl.read().decode("utf-8")
         else:
@@ -184,8 +197,11 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = ' '.join(data)
     # Python
     elif ext.lower() in ['py', 'sh']:
-        with open(path) as f:
-            file = f.read()
+        if type(path) == BytesIO:
+            file = path.read().decode()
+        else:
+            with open(path) as f:
+                file = f.read()
         # Parse the data
         for line in file.split('\n'):
             l_striped = line.strip()  # Removing trailing spaces
@@ -198,8 +214,11 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = ' '.join(data)
     # JavaScript
     elif ext.lower() in ['js']:
-        with open(path) as f:
-            file = f.read()
+        if type(path) == BytesIO:
+            file = path.read().decode()
+        else:
+            with open(path) as f:
+                file = f.read()
         for line in file.split('\n'):  # Parse the data
             l_striped = line.strip()  # Removing trailing spaces
             if parse:
@@ -219,7 +238,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = pd.read_json(path, **kwargs)
     # Parquet
     elif ext.lower() in ['parq', 'parquet']:
-        if useIAM:
+        if orgn == 'S3':
             data = pd.read_parquet(path)
         elif type(engine) == str:
             if engine.lower() in ['py', 'pa', 'pyarrow']:
@@ -237,9 +256,12 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = engine(path, **kwargs)
     # Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
-        with open(path) as f:
-            for line in f:
-                print(line.rstrip())
+        if type(path) == BytesIO:
+            print(path.read().decode())
+        else:
+            with open(path) as f:
+                for line in f:
+                    print(line.rstrip())
     else:
         with open(path) as f:
             file = f.read()

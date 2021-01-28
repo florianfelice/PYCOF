@@ -20,6 +20,7 @@ import datetime
 import hashlib
 import warnings
 import csv
+from types import SimpleNamespace
 
 from .misc import verbose_display, file_age, write, _get_config, _pycof_folders
 
@@ -70,6 +71,19 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
         conn.close()
         write(sql, query_path + file_name, perm='w', verbose=verbose)
         read.to_csv(data_path + file_name, index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+    def age(fmt='seconds'):
+        return file_age(file_path=os.path.join(data_path, file_name), format=fmt)
+
+    read.meta = SimpleNamespace()
+    read.meta.cache = SimpleNamespace()
+    read.meta.cache.creation_date = datetime.datetime.now() - datetime.timedelta(seconds=age())
+    read.meta.cache.cache_path = os.path.join(data_path, file_name)
+    read.meta.cache.query_path = os.path.join(query_path, file_name)
+    read.meta.cache._age_format = age_fmt
+    read.meta.cache._age_value = c_time
+    read.meta.cache._cache_time = cache_time
+    read.meta.cache.age = age
 
     return read
 

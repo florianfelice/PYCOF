@@ -70,10 +70,10 @@ Check the `Google API documentation <https://developers.google.com/calendar/quic
 
 
 *****************************************************************************
-What if I change an argument in the SQL query and run with :obj:`cache=True`?
+What if I change an argument in the SQL query and run with :obj:`cache='1h'`?
 *****************************************************************************
 
-See `SQL FAQ 1 <../sql/sql.html?orgn=pycof_faq#what-if-i-change-an-argument-in-the-sql-query-and-run-with-cache-true>`_.
+See `SQL FAQ 1 <../sql/sql.html?orgn=pycof_faq#what-if-i-change-an-argument-in-the-sql-query-and-run-with-cache-1h>`_.
 
 
 ----

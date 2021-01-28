@@ -79,10 +79,17 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
             }
 
     :Example:
-        >>> pycof.remote_execute_sql("SELECT * FROM SCHEMA.TABLE LIMIT 10")
+        >>> df = pycof.remote_execute_sql("SELECT * FROM SCHEMA.TABLE LIMIT 10")
 
     :Returns:
         * :obj:`pandas.DataFrame`: Result of an SQL query if :obj:`query_type = "SELECT"`.
+
+        Metadata are also available to users with addtionnal information regarding the SQL query and the file.
+
+        * :obj:`df.meta.cache.creation_date`: Datetime when the query has been run and cached.
+        * :obj:`df.meta.cache.cache_path`: Path to the local cached file.
+        * :obj:`df.meta.cache.query_path`: Path to the local cached SQL query.
+        * :obj:`df.meta.cache.age()`: Function to evaluate the age of the data file. See :py:meth:`pycof.misc.file_age` for formats available.
     """
 
     # ============================================================================================

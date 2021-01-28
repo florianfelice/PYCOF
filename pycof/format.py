@@ -508,8 +508,6 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
                         fp = open(filePath, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                        subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
-                        print('Downloaded "{file}" from email titled "{subject}" with UID .'.format(file=fileName, subject=subject))
 
             df = df.append(for_df, ignore_index=True)
         return df

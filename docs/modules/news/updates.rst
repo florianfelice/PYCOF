@@ -10,7 +10,7 @@ Library versions in between are used to fix bugs and implement improvement sugge
 ----
 
 ***********************************************************************
-1.2.4 - January 24, 2021 - Emails and Google Calendar are now supported
+1.2.5 - February 2, 2021 - Emails and Google Calendar are now supported
 ***********************************************************************
 
 A new module :py:meth:`pycof.format.GoogleCalendar` allows users to retreive events from Google Calendar.
@@ -19,6 +19,9 @@ The user can also use :py:meth:`pycof.format.GoogleCalendar.next_events` to find
 
 Another module :py:meth:`pycof.format.GetEmails` allows users to retreive the most recent emails from a selected address.
 Users can retreive a fixed number of emails and their attachments.
+
+An additional namespace is available in the output of :py:meth:`pycof.sql.remote_execute_sql`.
+Metadata have been added when the cache is called and allow users to have information regarding the cache in place, the last run date of the query, the file age, etc...
 
 
 ^^^^^^^^^^^^^^
@@ -38,6 +41,10 @@ How to use it?
     # Retreive last 10 emails
     pycof.GetEmails(10)
 
+    # Check file age of an SQL output
+    df = pc.remote_execute_sql(sql, cache='2h')
+    df.meta.cache.age()
+
 
 ^^^^^^^^^^^^^^^^^^
 How to install it?
@@ -45,10 +52,10 @@ How to install it?
 
 .. code::
 
-    pip3 install pycof==1.2.4
+    pip3 install pycof==1.2.5
 
 
-See more details: :py:meth:`pycof.format.GoogleCalendar` / :py:meth:`pycof.format.GetEmails`
+See more details: :py:meth:`pycof.format.GoogleCalendar` / :py:meth:`pycof.format.GetEmails` / :py:meth:`pycof.sql.remote_execute_sql`
 
 
 ----

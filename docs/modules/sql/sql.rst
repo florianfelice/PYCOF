@@ -17,8 +17,8 @@ Credentials
 Save your credentials locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will by default look for the credentials located in :obj:`/etc/config.json`.
-On Windows, save the config file as :obj:`C:/Windows/config.json`.
+The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will by default look for the credentials located in :obj:`/etc/.pycof/config.json`.
+On Windows, save the config file as :obj:`C:/Windows/.pycof/config.json`.
 
 The file follows the below structure:
 
@@ -30,17 +30,17 @@ The file follows the below structure:
    "DB_HOST": "",
    "DB_PORT": "3306",
    "DB_DATABASE": "",
-   "__COMMENT_1__": "Email specific, send_email"
+   "__COMMENT_1__": "Email specific, send_email",
    "EMAIL_USER": "",
    "EMAIL_PASSWORD": "",
    "EMAIL_SMTP": "smtp.gmail.com",
-   "EMAIL_PORT": "587"
-   "__COMMENT_2__": "IAM specific, if useIAM=True in remote_execute_sql",
+   "EMAIL_PORT": "587",
+   "__COMMENT_2__": "IAM specific, if connection='SSH' in remote_execute_sql",
    "CLUSTER_NAME": "",
    "AWS_ACCESS_KEY_ID": "",
    "AWS_SECRET_ACCESS_KEY": "",
    "REGION": "eu-west-1",
-   "__COMMENT_3__": "SSH specific"
+   "__COMMENT_3__": "SSH specific",
    "SSH_USER": "",
    "SSH_KEY": "",
    "SSH_PASSWORD": ""
@@ -114,10 +114,10 @@ You only need to ensure you SQL user has write access on the table and to specif
 FAQ
 ***
 
-1 - What if I change an argument in the SQL query and run with :obj:`cache=True`?
+1 - What if I change an argument in the SQL query and run with :obj:`cache='1h'`?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The function :py:meth:`pycof.remote_execute_sql` looks at your SQL query as a whole when saving/loading the cache data.
+The function :py:meth:`pycof.sql.remote_execute_sql` looks at your SQL query as a whole when saving/loading the cache data.
 Even a slight change in the query (column name, filter, etc...) will trigger a new run of the new query before being cached again.
 You can then safely use caching without worrying about the eventual evolution of your SQL.
 
@@ -208,7 +208,7 @@ You can then execute your query:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The function :py:meth:`pycof.sql.remote_execute_sql` can take into account `IAM <https://aws.amazon.com/iam/features/manage-users/>`_ user's credentials.
-You need to ensure that your credentials file :obj:`/etc/config.json` includes the IAM access and secret keys with the Redshift cluster information.
+You need to ensure that your credentials file :obj:`/etc/.pycof/config.json` includes the IAM access and secret keys with the Redshift cluster information.
 The only argument to change when calling the function is to set :obj:`connection='IAM'`.
 
 The function will then use the `AWS access and secret keys <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html>`_ to ask AWS to provide the user name and password to connect to the cluster.
