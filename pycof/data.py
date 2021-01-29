@@ -95,7 +95,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         bucket = path.replace('s3://', '').split('/')[0]
         folder_path = '/'.join(path.replace('s3://', '').split('/')[1:])
 
-        if ext.lower() in ['csv', 'txt', 'parq', 'parquet']:
+        if ext.lower() in ['csv', 'txt', 'parq', 'parquet', 'html', 'json', 'js', 'py', 'sh', 'xls', 'xlsx']:
             # If file can be loaded by pandas, we do not download locally
             verbose_display('Loading the data from S3 directly', verbose)
             obj = s3.get_object(Bucket=bucket, Key=folder_path)
