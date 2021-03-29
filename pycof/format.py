@@ -493,7 +493,10 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
             ddt = dateparser.parse(msg['Date'].strip())
             if ddt is None:
                 ddt = dateparser.parse(msg['Date'].replace('00 (PST)', ' PST').split(',')[1])
-            _date = ddt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzlocal())
+            try:
+                _date = ddt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzlocal())
+            except Exception:
+                _date = None
             for_df = {'From': _from, 'Subject': _subj, 'To': _to, 'Date': _date}
 
             # Get email attachments
