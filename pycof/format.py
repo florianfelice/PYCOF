@@ -121,26 +121,31 @@ def add_zero(nb):
 #######################################################################################################################
 
 # Put thousand separator
-def group(nb, digits=0):
+def group(nb, digits=0, unit=''):
     """Transforms a number into a string with a thousand separator.
 
     :Parameters:
         * **nb** (:obj:`float`): Number to be transformed.
         * **digits** (:obj:`int`): Number of digits to round.
+        * **unit** (:obj:`str`): Unit to be displayed (defaults to '').
 
     :Example:
         >>> pycof.group(12345)
         ... '12,345'
         >>> pycof.group(12345.54321, digits=3)
         ... '12,345.543'
+        >>> pycof.group(12.54, digits=3, unit='%')
+        ... '12.54%'
 
     :Returns:
         * :obj:`str`: Transformed number.
     """
     if math.isnan(nb):
         return('-')
+    elif nb == 0.:
+        return('-')
     else:
-        s = '%d' % nb
+        s = '%d' % round(nb, digits)
         groups = []
         if digits > 0:
             dig = '.' + str(nb).split('.')[1][:digits]
@@ -149,7 +154,7 @@ def group(nb, digits=0):
         while s and s[-1].isdigit():
             groups.append(s[-3:])
             s = s[:-3]
-        return s + ','.join(reversed(groups)) + dig
+        return s + ','.join(reversed(groups)) + dig + unit
 
 
 #######################################################################################################################

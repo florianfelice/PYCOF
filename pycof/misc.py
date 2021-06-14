@@ -40,7 +40,7 @@ def _pycof_folders(output=None, verbose=False):
                     Please create folder with: sudo mkdir {creds_fold} or run your script with super-user.""")
 
     # Queries temp folder
-    folds_q = os.path.join(temp_path, 'pycof', 'cache', 'data') + os.sep
+    folds_q = os.path.join(temp_path, 'pycof', 'cache', 'queries') + os.sep
     if not os.path.exists(folds_q):
         try:
             os.makedirs(folds_q)
