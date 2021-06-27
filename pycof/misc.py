@@ -20,7 +20,7 @@ def _pycof_folders(output=None, verbose=False):
     # Define the root folder depending on the OS
     if sys.platform in ['win32', 'win64', 'cygwin', 'msys']:
         temp_path = os.environ['TEMP'] + os.sep
-        home = os.path.expand('~')
+        home = os.path.expanduser('~')
         creds_fold = os.path.join(home, '.pycof')  + os.sep
     else:
         temp_path = os.path.join(os.sep, 'tmp') + os.sep
