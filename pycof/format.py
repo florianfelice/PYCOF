@@ -7,6 +7,7 @@ import pickle
 import re
 import math
 import pandas as pd
+import numpy as np
 
 from tqdm import tqdm
 import datetime
@@ -484,7 +485,7 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
         first_email_id = int(id_list[0])
         latest_email_id = int(id_list[-1])
 
-        df = pd.DataFrame()
+        df = []
         for num in range(latest_email_id, latest_email_id - nb_email, -1):
             typ, data = mail.fetch(str(num), '(RFC822)')
             raw_email = data[0][1]  # converts byte literal to string removing b''
@@ -501,7 +502,7 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
             try:
                 _date = ddt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzlocal())
             except Exception:
-                _date = None
+                _date = np.nan
             for_df = {'From': _from, 'Subject': _subj, 'To': _to, 'Date': _date}
 
             # Get email attachments
@@ -517,8 +518,8 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
                         fp.write(part.get_payload(decode=True))
                         fp.close()
 
-            df = df.append(for_df, ignore_index=True)
-        return df
+            df += [pd.DataFrame(for_df, index=[0])]
+        return pd.concat(df).reset_index(drop=True)
     except Exception as e:
         traceback.print_exc()
         print(str(e))
