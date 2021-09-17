@@ -24,7 +24,7 @@ from .misc import write, _get_config, file_age, verbose_display, _pycof_folders
 ##############################################################################################################################
 
 # Easy file read
-def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='pyarrow', credentials={}, cache='30mins', verbose=False, **kwargs):
+def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_name=0, engine='auto', credentials={}, cache='30mins', verbose=False, **kwargs):
     """Read and parse a data file.
     It can read multiple format. For data frame-like format, the function will return a pandas data frame, otherzise a string.
     The function will by default detect the extension from the file path. You can force an extension with the argument.
@@ -38,7 +38,7 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         * **remove_comments** (:obj:`bool`): Remove comments from the loaded file (defaults True).
         * **sep** (:obj:`str`): Columns delimiter for pd.read_csv (defaults ',').
         * **sheet_name** (:obj:`str`): Tab column to load when reading Excel files (defaults 0).
-        * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or the function from your preferred library (defaults 'pyarrow').
+        * **engine** (:obj:`str`): Engine to use to load the file. Can be 'pyarrow' or the function from your preferred library (defaults 'auto').
         * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/.pycof' (defaults {}).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to the engine or values to be formated in the file to load.
 
@@ -156,7 +156,8 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
         data = pd.read_csv(path, sep=sep, **kwargs)
     # XLSX
     elif ext.lower() in ['xls', 'xlsx']:
-        data = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
+        _engine = 'openpyxl' if engine == 'auto' else engine
+        data = pd.read_excel(path, sheet_name=sheet_name, engine=_engine, **kwargs)
     # SQL
     elif ext.lower() in ['sql']:
         if type(path) == BytesIO:
@@ -238,22 +239,24 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
             data = pd.read_json(path, **kwargs)
     # Parquet
     elif ext.lower() in ['parq', 'parquet']:
+        _engine = 'pyarrow' if engine == 'auto' else engine
+
         if orgn == 'S3':
             data = pd.read_parquet(path)
-        elif type(engine) == str:
-            if engine.lower() in ['py', 'pa', 'pyarrow']:
+        elif type(_engine) == str:
+            if _engine.lower() in ['py', 'pa', 'pyarrow']:
                 import pyarrow.parquet as pq
                 dataset = pq.ParquetDataset(path, **kwargs)
                 table = dataset.read()
                 data = table.to_pandas()
-            elif engine.lower() in ['fp', 'fastparquet']:
+            elif _engine.lower() in ['fp', 'fastparquet']:
                 from fastparquet import ParquetFile
                 dataset = ParquetFile(path, **kwargs)
                 table = dataset.to_pandas()
             else:
                 raise ValueError('Engine value not allowed')
         else:
-            data = engine(path, **kwargs)
+            data = _engine(path, **kwargs)
     # Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
         if type(path) == BytesIO:
