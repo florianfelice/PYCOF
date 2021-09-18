@@ -291,7 +291,7 @@ def str2bool(value):
 
 # Getting Google Calendar events
 class GoogleCalendar:
-    def __init__(self, timezone='Europe/Paris', scopes=['https://www.googleapis.com/auth/calendar.readonly']):
+    def __init__(self, timezone='Europe/Paris', scopes=['https://www.googleapis.com/auth/calendar.readonly'], temp_folder=None):
         """Get all available events on a Google Calendar.
         The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
 
@@ -299,6 +299,8 @@ class GoogleCalendar:
         :type timezone: :obj:`str`, optional
         :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://www.googleapis.com/auth/calendar.readonly'].
         :type scopes: :obj:`list`, optional
+        :param temp_folder: Folder in which we will save the `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
+        :type temp_folder: :obj:`str`, optional
 
         :Configuration: The function requires a configuration file stored at :obj:`/etc/.pycof/google.json`.
             This file can be generated at https://developers.google.com/calendar/quickstart/python.
@@ -306,6 +308,7 @@ class GoogleCalendar:
         """
         self.timezone = pytz.timezone(timezone)
         self.scopes = scopes
+        self.data_fold = _pycof_folders('data') if temp_folder is None else temp_folder
 
     def _get_creds(self):
         """Retreive Google credentials.
@@ -317,7 +320,7 @@ class GoogleCalendar:
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        token_path = os.path.join(_pycof_folders('data'), 'token.pickle')
+        token_path = os.path.join(self.data_fold, 'token.pickle')
         creds_path = os.path.join(_pycof_folders('creds'), 'google.json')
 
         if os.path.exists(token_path):
