@@ -54,11 +54,11 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
         age = file_age(os.path.join(data_path, file_name), format=age_fmt)
         if (query_type.upper() == "SELECT") & (age < c_time):
             # If file is younger than c_time, we read the cached data
-            verbose_display('Reading cached data', verbose)
+            verbose_display(f'Reading cached data - {filename}', verbose)
             read = f_read(os.path.join(data_path, file_name))
         else:
             # Else we execute the SQL query and save the ouput + the query
-            verbose_display('Execute SQL query and cache the data - updating cache', verbose)
+            verbose_display(f'Execute {filename} SQL query and cache the data - updating cache', verbose)
             conn = tunnel.connector()
             read = pd.read_sql(sql, conn)
             conn.close()
@@ -66,7 +66,7 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
             write(read, os.path.join(data_path, file_name), index=False)
     else:
         # If the file does not even exist, we execute SQL, save the query and its output
-        verbose_display('Execute SQL query and cache the data', verbose)
+        verbose_display(f'Execute {filename} SQL query and cache the data', verbose)
         conn = tunnel.connector()
         read = pd.read_sql(sql, conn)
         conn.close()
