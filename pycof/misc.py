@@ -6,6 +6,7 @@ import boto3
 
 import pandas as pd
 import numpy as np
+import logging as log
 
 from io import StringIO, BytesIO
 
@@ -246,9 +247,9 @@ def verbose_display(element, verbose=True, sep=' ', end='\n', return_list=False)
     if (verbose in [1, True]) & (type(element) in [list, range]) & (return_list is False):
         return(tqdm(element))
     elif (verbose in [1, True]) & (type(element) in [list]) & (return_list is True):
-        return(print(*element, sep=sep, end=end))
+        return(log.warning(*element, sep=sep, end=end))
     elif (verbose in [1, True]) & (type(element) in [str]) & (return_list is False):
-        return(print(element, sep=sep, end=end))
+        return(log.warning(element, sep=sep, end=end))
     elif (verbose in [0, False]) & (type(element) in [str, type(None)]):
         disp = 0  # we don't display anything
     else:
