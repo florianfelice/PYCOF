@@ -34,6 +34,27 @@ The library is supported on Windows, Linux and MacOS.
 Setup
 =====
 
+1. AWS credentials setup
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some functions such as :py:meth:`pycof.sql.remote_execute_sql`, :py:meth:`pycof.data.f_read` or :py:meth:`pycof.misc.write` may need to have access to AWS to intereact with different services.
+On a AWS instance (e.g. EC2, SageMaker), you may not need to got though these steps as the instance would directly consume the IAM role you assigned to it.
+
+Then, on a local instance (which will rely on a IAM user), run:
+
+.. code-block:: console
+
+   aws configure
+
+and enter your AWS access and private keys.
+
+Note that this setup is required only if you use AWS services such as S3 or Redshift.
+These functions also work without credentials for local use.
+
+
+2. PYCOF configuration setup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The functions :py:meth:`pycof.sql.remote_execute_sql` and :py:meth:`pycof.format.send_email` will, by default, look for the credentials located in :obj:`/etc/.pycof/config.json`.
 On Windows, save the config file as :obj:`C:/Users/<username>/.pycof/config.json`.
 
@@ -55,9 +76,6 @@ The file follows the below structure:
    "EMAIL_PORT": "587",
    "__COMMENT_2__": "IAM specific, if connection='SSH' in remote_execute_sql",
    "CLUSTER_NAME": "",
-   "AWS_ACCESS_KEY_ID": "",
-   "AWS_SECRET_ACCESS_KEY": "",
-   "REGION": "eu-east-3",
    "__COMMENT_3__": "SSH specific",
    "SSH_USER": "",
    "SSH_KEY": "",
@@ -75,7 +93,6 @@ and paste the above json after filling the empty strings (pre-filled values are 
 
 **Reminder:** To save the file, with nano press :obj:`CTRL + O`, confirm with :obj:`ENTER` then :obj:`CTRL + X` to exit.
 
-On Windows, use the path :obj:`C:/Users/<username>/.pycof/config.json`.
 
 
 Available functions

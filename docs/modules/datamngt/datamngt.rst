@@ -54,9 +54,6 @@ You can also find more details on the `pyarrow read_table documentation <https:/
     When loading a file from S3, the credentials required to access AWS. See `setup`_ for the config file or `FAQ3 <#how-can-i-get-my-aws-credentials-with-boto3>`_ for `boto3`_.
 
 
-----
-
-
 
 3 - How can I get my AWS credentials with boto3?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,6 +70,25 @@ You can use `boto3`_ to get your credentials before passing to a function:
     config = {"AWS_ACCESS_KEY_ID": creds[0],
               "AWS_SECRET_ACCESS_KEY": creds[1],
               "REGION": "eu-west-3"}
+
+
+
+4 - How do I save my AWS credentials?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you work from an AWS EC2 instance or a SageMaker notebook instance, you may not need to setup your credentials.
+Just ensure you assigned an IAM role with the correct permissions to your instance.
+You should then be able to use PYCOF normally.
+
+If you use it locally, or with an instance not using an AWS IAM role (but user), you then need to run:
+
+.. code-block:: console
+
+    ubuntu@ip-123-45-67-890:~$ aws configure
+    AWS Access Key ID [None]: ****
+    AWS Secret Access Key [None]: ****
+    Default region name [None]: us-east-1
+    Default output format [None]: json
 
 
 

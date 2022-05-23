@@ -25,7 +25,7 @@ from .format import file_age, verbose_display
 #######################################################################################################################
 
 # Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, verbose=True, connection='direct', autofill_nan=True,
+def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, profile_name=None, verbose=True, connection='direct', autofill_nan=True,
                        engine='default', cache=False, cache_name=None, *args, **kwargs):
     """Simplified function for executing SQL queries. Will look at the credentials at :obj:`/etc/.pycof/config.json`. User can also pass a dictionnary for
     credentials.
@@ -36,6 +36,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
         * **table** (:obj:`str`): Table in which we want to operate, only used for INSERT and DELETE (defaults "").
         * **data** (:obj:`pandas.DataFrame`): Data to load on the database (defaults {}).
         * **credentials** (:obj:`dict`): Credentials to use to connect to the database. Check the FAQ for arguments required depending on your type of connection. You can also provide the credentials path or the json file name from '/etc/.pycof/' (defaults {}).
+        * **profile_name** (:obj:`str`): Profile name of the AWS profile configured with the command `aws configure` in case of `connection='IAM'`(defaults None).
         * **verbose** (:obj:`bool`): Display progression bar (defaults True).
         * **connection** (:obj:`str`): Type of connection to establish. Can either be 'direct', 'IAM' or 'SSH' (defaults 'direct').
         * **autofill_nan** (:obj:`bool`): Replace NaN values by 'NULL' (defaults True).
@@ -132,7 +133,7 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # Credentials load
-    config = _get_credentials(_get_config(credentials), connection)
+    config = _get_credentials(_get_config(credentials), profile_name=profile_name, connection=connection)
 
     # ============================================================================================
     # Start the connection

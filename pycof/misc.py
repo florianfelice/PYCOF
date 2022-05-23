@@ -3,6 +3,7 @@ import sys
 import getpass
 import json
 import boto3
+from botocore.exceptions import ProfileNotFound
 
 import pandas as pd
 import numpy as np
@@ -109,7 +110,7 @@ def _get_config(credentials={}):
 ########################################################################################################################
 # Write to a txt file
 
-def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **kwargs):
+def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, profile_name=None, **kwargs):
     """Write a line of text into a file (usually .txt) or saves data objects.
     As opposed to Pandas' built-in functions (:obj:`to_csv` or :obj:`to_parquet`), this function allows to pass AWS IAM credentials similar to
     :py:meth:`pycof.sql.remote_execute_sql`.
@@ -121,6 +122,7 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
         * **verbose** (:obj:`bool`): Return the length of the inserted text if set to True (defaults False).
         * **end_row** (:obj:`str`): Character to end the row (defaults '\\n').
         * **credentials** (:obj:`dict`): Credentials to use to connect to AWS S3. You can also provide the credentials path or the json file name from '/etc/' (defaults {}).
+        * **profile_name** (:obj:`str`): Profile name of the AWS profile configured with the command `aws configure` (defaults None).
         * **\\*\\*kwargs** (:obj:`str`): Arguments to be passed to pandas function (either :obj:`to_csv` or :obj:`to_parquet`).
 
     :Example:
@@ -134,18 +136,20 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, **k
     useIAM = path.startswith('s3://')
 
     if useIAM:
-        # If S3, get credentials
-        config = _get_config(credentials)
-        if config.get("AWS_SECRET_ACCESS_KEY") in [None, 'None', '']:
-            s3 = boto3.client("s3")
-            s3_resource = boto3.resource("s3")
-        else:
-            s3 = boto3.client("s3", aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
-                              aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
+        # If S3, try AWS cli profile or credentials
+        try:
+            sess = boto3.session.Session(profile_name=profile_name)
+            s3 = sess.client('s3')
+            s3_resource = sess.resource('s3')
+        except ProfileNotFound:
+            config = _get_config(credentials)
+            s3 = boto3.client('s3', aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"), aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
                               region_name=config.get("REGION"))
-            s3_resource = boto3.resource("s3", aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
+            s3_resource = boto3.resource('s3', aws_access_key_id=config.get("AWS_ACCESS_KEY_ID"),
                                          aws_secret_access_key=config.get("AWS_SECRET_ACCESS_KEY"),
                                          region_name=config.get("REGION"))
+        except FileNotFoundError:
+            raise ConnectionError("Please run 'aws config' on your terminal and initialize the parameters or profide a correct value for crendetials.")
 
     # Pandas DataFrame
     if type(file) == pd.DataFrame:

@@ -6,6 +6,49 @@ Library updates
 This section aims at showing the latest release of the library.
 We show most important releases that included new features.
 Library versions in between are used to fix bugs and implement improvement suggested by users' feedback.
+----
+
+***************************************************************************
+1.3.0 - May 23, 2023 - AWS credentials profile prioritized over config file
+***************************************************************************
+
+PYCOF now prioritizes AWS cli profiles created through the `aws configure` command over `config.json` file.
+For functions :py:meth:`pycof.data.f_read` and :py:meth:`pycof.misc.write`, users no longer to create the `config.json` file.
+Only requirement will be to run the command `aws configure` and register the IAM access and private keys.
+For the function :py:meth:`pycof.sql.remote_execute_sql`, the `config.json` file may remain required for the case where `connection='IAM'` to connect to a Redshift cluster.
+The fallback solution with `config.json` file containing the fields `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` still remains available but may be deprecated in later versions.
+
+This change will allow faster setup and even no setup required on AWS environments (e.g. EC2, SageMaker).
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    # Load a parquet file from Amazon S3
+    df = pc.f_read('s3://bucket/path/to/file.parquet', profile_name='default')
+    
+    # Write a file on Amazon S3
+    pc.write(df, 's3://bucket/path/to/file2.parquet', profile_name='default')
+    
+    # Run a query on a Redshift cluster
+    df2 = pc.remote_execute_sql('/path/to/query.sql', connection='IAM', profile_name='default')
+
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.3.0
+
+
+See more details: :py:meth:`pycof.data.f_read` / :py:meth:`pycof.misc.write` / :py:meth:`pycof.sql.remote_execute_sql`
 
 ----
 

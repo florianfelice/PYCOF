@@ -92,7 +92,7 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
 # #######################################################################################################################
 # Get DB credentials
 
-def _get_credentials(config, connection='direct'):
+def _get_credentials(config, profile_name=None, connection='direct'):
 
     useIAM = connection.lower() == 'iam'
 
@@ -121,14 +121,14 @@ def _get_credentials(config, connection='direct'):
     # Get AWS credentials with access and secret key
     if (useIAM) & (secret_key in [None, 'None', '']):
         try:
-            session = boto3.Session(profile_name='default')
+            session = boto3.Session(profile_name=profile_name)
         except Exception:
             raise ConnectionError(boto_error)
     elif (useIAM):
         try:
             session = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
         except Exception:
-            session = boto3.Session(profile_name='default', aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
+            session = boto3.Session(profile_name=profile_name, aws_access_key_id=access_key, aws_secret_access_key=secret_key, region_name=region)
 
     if useIAM:
         rd_client = session.client('redshift')
