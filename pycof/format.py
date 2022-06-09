@@ -20,16 +20,22 @@ import email
 import traceback
 import dateparser
 from dateutil import tz
+import base64
 
 import smtplib
+from email.message import EmailMessage
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from .sqlhelper import _get_config, _get_credentials
 from .misc import file_age, verbose_display, _pycof_folders
+
+# Define default Google API scopes
+default_scopes = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar.readonly']
 
 
 #######################################################################################################################
@@ -45,7 +51,6 @@ def send_email(to, subject, body, cc='', credentials={}):
         * **body** (:obj:`str`): Content of the email to be send.
         * **cc** (:obj:`str`): Email address to be copied (defaults None).
         * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from :obj:`/etc/.pycof/` (defaults {}).
-        * **verbose** (:obj:`bool`): Displays if the email was sent successfully (defaults False).
 
     :Configuration: The function requires the below arguments in the configuration file.
 
@@ -95,6 +100,99 @@ def send_email(to, subject, body, cc='', credentials={}):
     # Send email
     server.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
     server.quit()
+
+# Send an email from Gmail
+class google_email:
+    def __init__(self, credentials={}, scopes=default_scopes, temp_folder=None):
+        """Simplified class to send email from a Gmail email address with secured connection with developper API.
+        The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
+
+        :param credentials: Credentials to use which includes the from email address to display. See Setup, defaults to {}.
+        :type credentials: :obj:`dict`, optional
+        :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar.readonly'].
+        :type scopes: :obj:`list`, optional
+        :param temp_folder: Folder in which we will save the `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
+        :type temp_folder: :obj:`str`, optional
+
+        :Configuration: The function requires a configuration file stored at :obj:`/etc/.pycof/google.json`.
+            This file can be generated at https://developers.google.com/calendar/quickstart/python.
+            User will need to enable the Google Calendar API on the account from Step 1.
+
+        :Example:
+            >>> _body = '<html><body><h1>This email is a test</h1><p>Hello world!</p></body></html>'
+            >>> pc.google_email().send(to='email@example.com', subject='Test', body=_body, cc='friend@example.com')
+        """
+        self.scopes = scopes
+        self.data_fold = _pycof_folders('data') if temp_folder is None else temp_folder
+        self._creds = credentials
+
+    def _get_creds(self):
+        """Retreive Google credentials.
+
+        :return: Google calendar credentials.
+        :rtype: :obj:`google_auth_oauthlib`
+        """
+        creds = None
+        # The file token.pickle stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        token_path = os.path.join(self.data_fold, 'token.pickle')
+        creds_path = os.path.join(_pycof_folders('creds'), 'google.json')
+
+        if os.path.exists(token_path):
+            with open(token_path, 'rb') as token:
+                creds = pickle.load(token)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.scopes)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open(token_path, 'wb') as token:
+                pickle.dump(creds, token)
+        return creds
+
+    def send(self, to, subject, body, cc='', return_status=False):
+        """Send the email.
+
+        :param to: Recipient of the email.
+        :type to: :obj:`str`
+        :param subject: Subject of the email.
+        :type subject: :obj:`str`
+        :param body: Content of the email to be send.
+        :type body: :obj:`str`
+        :param cc: Email address to be copied, defaults to ''.
+        :type cc: :obj:`str`, optional
+        :param return_status: Returns status of the email sent, defaults to False.
+        :type return_status: :obj:`bool`, optional
+
+        :return: If `return_status=True`, returns a dictionnary with the status of the email.
+        :rtype: :obj:`dict`
+        """
+        config = _get_config(self._creds)
+        try:
+            service = build('gmail', 'v1', credentials=self._get_creds())
+            msg = MIMEMultipart()
+            msg['from'] = config.get('EMAIL_SENDER')
+            msg['to'] = to
+            msg['cc'] = '' if cc == '' else cc
+            msg['subject'] = subject
+
+            mail_type = 'html' if '</' in body else 'plain'
+            msg.attach(MIMEText(body, mail_type))
+
+            create_message = {
+                "raw": base64.urlsafe_b64encode(bytes(msg.as_string(), "utf-8")).decode("utf-8")
+            }
+            # pylint: disable=E1101
+            send_message = (service.users().messages().send(userId="me", body=create_message).execute())
+        except HttpError as error:
+            print(F'An error occurred: {error}')
+            send_message = None
+        if return_status:
+            return send_message
 
 
 #######################################################################################################################
@@ -291,7 +389,7 @@ def str2bool(value):
 
 # Getting Google Calendar events
 class GoogleCalendar:
-    def __init__(self, timezone='Europe/Paris', scopes=['https://www.googleapis.com/auth/calendar.readonly'], temp_folder=None):
+    def __init__(self, timezone='Europe/Paris', scopes=default_scopes, temp_folder=None):
         """Get all available events on a Google Calendar.
         The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
 
