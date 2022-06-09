@@ -103,7 +103,7 @@ def send_email(to, subject, body, cc='', credentials={}):
 
 # Send an email from Gmail
 class google_email:
-    def __init__(self, credentials={}, scopes=default_scopes, temp_folder=None):
+    def __init__(self, credentials={}, scopes=default_scopes, token_path=None):
         """Simplified class to send email from a Gmail email address with secured connection with developper API.
         The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
 
@@ -111,8 +111,8 @@ class google_email:
         :type credentials: :obj:`dict`, optional
         :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar.readonly'].
         :type scopes: :obj:`list`, optional
-        :param temp_folder: Folder in which we will save the `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
-        :type temp_folder: :obj:`str`, optional
+        :param token_path: Path to the saved `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
+        :type token_path: :obj:`str`, optional
 
         :Configuration: The function requires a configuration file stored at :obj:`/etc/.pycof/google.json`.
             This file can be generated at https://developers.google.com/calendar/quickstart/python.
@@ -121,9 +121,11 @@ class google_email:
         :Example:
             >>> _body = '<html><body><h1>This email is a test</h1><p>Hello world!</p></body></html>'
             >>> pc.google_email().send(to='email@example.com', subject='Test', body=_body, cc='friend@example.com')
+            >>> # Alternative where we specify token_path
+            >>> pc.google_email(token_path='/home/ubuntu/token.pickle').send(to='email@example.com', subject='Test', body=_body, cc='friend@example.com')
         """
         self.scopes = scopes
-        self.data_fold = _pycof_folders('data') if temp_folder is None else temp_folder
+        self.token_path = os.path.join(_pycof_folders('data'), 'token.pickle') if token_path is None else token_path
         self._creds = credentials
 
     def _get_creds(self):
@@ -136,11 +138,10 @@ class google_email:
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        token_path = os.path.join(self.data_fold, 'token.pickle')
         creds_path = os.path.join(_pycof_folders('creds'), 'google.json')
 
-        if os.path.exists(token_path):
-            with open(token_path, 'rb') as token:
+        if os.path.exists(self.token_path):
+            with open(self.token_path, 'rb') as token:
                 creds = pickle.load(token)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
@@ -150,7 +151,7 @@ class google_email:
                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.scopes)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(token_path, 'wb') as token:
+            with open(self.token_path, 'wb') as token:
                 pickle.dump(creds, token)
         return creds
 
@@ -389,7 +390,7 @@ def str2bool(value):
 
 # Getting Google Calendar events
 class GoogleCalendar:
-    def __init__(self, timezone='Europe/Paris', scopes=default_scopes, temp_folder=None):
+    def __init__(self, timezone='Europe/Paris', scopes=default_scopes, token_path=None):
         """Get all available events on a Google Calendar.
         The `Google credentials file <https://developers.google.com/calendar/quickstart/python>`_ needs to be saved as :obj:`/etc/.pycof/google.json`.
 
@@ -397,8 +398,8 @@ class GoogleCalendar:
         :type timezone: :obj:`str`, optional
         :param scopes: Targeted permissions required. Check https://developers.google.com/calendar/auth for more details, defaults to ['https://www.googleapis.com/auth/calendar.readonly'].
         :type scopes: :obj:`list`, optional
-        :param temp_folder: Folder in which we will save the `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
-        :type temp_folder: :obj:`str`, optional
+        :param token_path: Path to the saved `token.pickle` authentication file, defaults to None and saves in the PYCOF temporary data folder.
+        :type token_path: :obj:`str`, optional
 
         :Configuration: The function requires a configuration file stored at :obj:`/etc/.pycof/google.json`.
             This file can be generated at https://developers.google.com/calendar/quickstart/python.
@@ -406,7 +407,7 @@ class GoogleCalendar:
         """
         self.timezone = pytz.timezone(timezone)
         self.scopes = scopes
-        self.data_fold = _pycof_folders('data') if temp_folder is None else temp_folder
+        self.token_path = os.path.join(_pycof_folders('data'), 'token.pickle') if token_path is None else token_path
 
     def _get_creds(self):
         """Retreive Google credentials.
@@ -418,11 +419,10 @@ class GoogleCalendar:
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        token_path = os.path.join(self.data_fold, 'token.pickle')
         creds_path = os.path.join(_pycof_folders('creds'), 'google.json')
 
-        if os.path.exists(token_path):
-            with open(token_path, 'rb') as token:
+        if os.path.exists(self.token_path):
+            with open(self.token_path, 'rb') as token:
                 creds = pickle.load(token)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
@@ -432,7 +432,7 @@ class GoogleCalendar:
                 flow = InstalledAppFlow.from_client_secrets_file(creds_path, self.scopes)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(token_path, 'wb') as token:
+            with open(self.token_path, 'wb') as token:
                 pickle.dump(creds, token)
         return creds
 
