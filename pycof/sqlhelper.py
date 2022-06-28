@@ -177,7 +177,7 @@ class SSHTunnel:
                 else:
                     ssh_path = self.config.get('SSH_KEY')
 
-                self.tunnel = sshtunnel.SSHTunnelForwarder((self.config.get('DB_HOST'), 22),
+                self.tunnel = sshtunnel.SSHTunnelForwarder((self.config.get('DB_HOST'), ssh_port),
                                                            ssh_username=self.config.get('SSH_USER'),
                                                            ssh_password=self.config.get('SSH_PASSWORD'),
                                                            ssh_pkey=ssh_path,
