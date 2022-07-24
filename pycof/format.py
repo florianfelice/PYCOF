@@ -196,7 +196,7 @@ class google_email:
         if return_status:
             return send_message
 
-    def getEmails(self, nb_email=1, _to='me'):
+    def getEmails(self, nb_email=1, include_spam=False, _to='me', *args):
         """Get latest emails from your Gmail address.
 
         :param nb_email: Number of emails to retreive, defaults to 1.
@@ -205,7 +205,7 @@ class google_email:
         :type _to: :obj:`str`, optional
 
         :example:
-            >>> pycof.GetEmails(2)
+            >>> pycof.google_emails().GetEmails(2)
             ... +----------------------------+-----------------+----------------+---------------+
             ... |                       Date |            From |        Subject |            To |
             ... +----------------------------+-----------------+----------------+---------------+
@@ -222,7 +222,7 @@ class google_email:
         service = build('gmail', 'v1', credentials=creds)
 
         # request a list of all the messages
-        result = service.users().messages().list(userId=_to).execute()
+        result = service.users().messages().list(userId=_to, maxResults=nb_email, includeSpamTrash=include_spam, *args).execute()
 
         # We can also pass maxResults to get any number of emails. Like this:
         # result = service.users().messages().list(maxResults=200, userId='me').execute()
@@ -243,13 +243,17 @@ class google_email:
                 payload = txt['payload']
                 headers = payload['headers']
 
+                _dest = _to
+                _subj = ''
+                _from = ''
+
                 # Look for Subject and Sender Email in the headers
                 for d in headers:
-                    if d['name'] == 'subject':
+                    if d['name'].lower() == 'subject':
                         _subj = d['value']
                     if d['name'] == 'From':
                         _from = d['value']
-                    if d['name'] == 'to':
+                    if d['name'].lower() == 'to':
                         _dest = d['value']
                     if d['name'] == 'Date':
                         ddt = dateparser.parse(d['value'].strip())
@@ -263,32 +267,35 @@ class google_email:
                 attch = {}
                 _body = ''
                 for part in payload.get('parts'):
-                    if part['filename']:
-                        att_id = part['body']['attachmentId']
-                        att = service.users().messages().attachments().get(userId=_to, messageId=msg['id'], id=att_id).execute()
-                        data = att['data']
-                        file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
-                        filePath = os.path.join(_pycof_folders('data'), part['filename'])
-                        attch.update({f'Attachment {i}': filePath})
-                        # Download the attachment
-                        with open(filePath, 'wb') as f:
-                            f.write(file_data)
-                        i += 1
-                    else:
-                        data = part['body']['data']
-                        data = data.replace("-", "+").replace("_", "/")
-                        decoded_data = base64.b64decode(data)
+                    try:
+                        if part['filename']:
+                            att_id = part['body']['attachmentId']
+                            att = service.users().messages().attachments().get(userId=_to, messageId=msg['id'], id=att_id).execute()
+                            data = att['data']
+                            file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
+                            filePath = os.path.join(_pycof_folders('data'), part['filename'])
+                            attch.update({f'Attachment {i}': filePath})
+                            # Download the attachment
+                            with open(filePath, 'wb') as f:
+                                f.write(file_data)
+                            i += 1
+                        else:
+                            data = part['body']['data']
+                            data = data.replace("-", "+").replace("_", "/")
+                            decoded_data = base64.b64decode(data)
 
-                        # Now, the data obtained is in lxml. So, we will parse
-                        # it with BeautifulSoup library
-                        soup = BeautifulSoup(decoded_data, "lxml")
-                        _body = soup.body()
+                            # Now, the data obtained is in lxml. So, we will parse
+                            # it with BeautifulSoup library
+                            soup = BeautifulSoup(decoded_data, "lxml")
+                            _body = soup.body()
+                    except Exception:
+                        pass
                 for_df = {'From': _from, 'To': _dest, 'Date': _date, 'Subject': _subj}  # , 'Body': _body
                 for_df.update(attch)
                 df += [pd.DataFrame(for_df, index=[0])]
             except Exception:
                 pass
-        return pd.concat(df).reset_index(drop=True)
+        return pd.concat(df).sort_values(by='Date', ascending=False).reset_index(drop=True)
 
 
 #######################################################################################################################
