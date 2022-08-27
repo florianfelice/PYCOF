@@ -270,7 +270,7 @@ def _insert_data(data, table, connector, autofill_nan=False, verbose=False):
     warnings.filterwarnings('ignore')  # Removing filter warning when changing data type
     dt_cols = []
     for col in data.columns:
-        if data[col].dtype == 'object':
+        if type(data.sample(1).reset_index()[col][0]) in [datetime.date, pd._libs.tslibs.timestamps.Timestamp]:
             try:
                 data.loc[:, col] = pd.to_datetime(data[col]).apply(str)
                 dt_cols += [col]
