@@ -181,8 +181,12 @@ def write(file, path, perm='a', verbose=False, end_row='\n', credentials={}, pro
             data_path = os.path.join(_pycof_folders('temp'), 'pycof', 'cache', 'data') + os.sep
             path = data_path + file_name
 
+        
         with open(path, perm) as f:
-            f.write(file + end_row)
+            if path.endswith('.json') or path.endswith('.jsonc'):
+                json.dump(file, f)
+            else:
+                f.write(file + end_row)
 
         if useIAM:
             s3.upload_file(path, bucket, folder_path)

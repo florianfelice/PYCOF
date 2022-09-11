@@ -237,6 +237,24 @@ def f_read(path, extension=None, parse=True, remove_comments=True, sep=',', shee
                 data = json.load(json_file)
         else:
             data = pd.read_json(path, **kwargs)
+    elif ext.lower() in ['jsonc']:
+        if type(path) == BytesIO:
+            file = path.read().decode()
+        else:
+            with open(path) as f:
+                file = f.read()
+        for line in file.split('\n'):  # Parse the data
+            l_striped = line.strip()
+            if remove_comments:
+                l_striped = re.sub(r"/\*(.|\s|\n)*?\*/", "", l_striped)
+                l_striped = l_striped.split('//')[0]
+                l_striped = l_striped.split('#')[0]
+            if l_striped != '':
+                data += [l_striped]
+        str_content = ' '.join(data)
+        # Ensure there is no comma at the end of the dict
+        str_content = str_content.replace(", }", "}")
+        data = json.loads(str_content)
     # Parquet
     elif ext.lower() in ['parq', 'parquet']:
         _engine = 'pyarrow' if engine == 'auto' else engine
