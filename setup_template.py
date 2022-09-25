@@ -7,7 +7,7 @@ setuptools.setup(
     name="{library}",
     version="{version}",
     author="Florian Felice",
-    author_email="florian.felice@outlook.com",
+    author_email="admin@florianfelice.com",
     description="{desc}",
     long_description=long_description,
     long_description_content_type="text/markdown",

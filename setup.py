@@ -7,7 +7,7 @@ setuptools.setup(
     name="pycof",  # Replace with your own username
     version="1.5.0",
     author="Florian Felice",
-    author_email="florian.felice@outlook.com",
+    author_email="admin@florianfelice.com",
     description="A package for commonly used functions",
     long_description=long_description,
     long_description_content_type="text/markdown",
