@@ -19,21 +19,21 @@ FAQ
 1 - How can I load a .json file as a dictionnary?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The function :py:meth:`pycof.data.f_read` allows to read different formats.
+The function :py:meth:`pycof.data.read` allows to read different formats.
 By default it will load as and :obj:`pandas.DataFrame` but you can provide :obj:`engine='json'` to load as :obj:`dict`.
 
 .. code:: python
 
     import pycof as pc
 
-    pc.f_read('/path/to/file.json', engine='json')
+    pc.read('/path/to/file.json', engine='json')
 
 
 
 2 - How can I read .parquet files?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Providing a path containing the keyword :obj:`.parquet` to :py:meth:`pycof.data.f_read`, it will by default call the `pyarrow`_ engine.
+Providing a path containing the keyword :obj:`.parquet` to :py:meth:`pycof.data.read`, it will by default call the `pyarrow`_ engine.
 You can also pass `pyarrow`_ specific argument for loading your file. In particular, you can parallilize the loading step by providing the argument
 :obj:`metadata_nthreads` and set it to the number of threads to be used.
 
@@ -42,9 +42,9 @@ You can also pass `pyarrow`_ specific argument for loading your file. In particu
     import pycof as pc
 
     # Reading a local file
-    df1 = pc.f_read('/path/to/file.parquet', metadata_nthreads=32)
+    df1 = pc.read('/path/to/file.parquet', metadata_nthreads=32)
     # Reading remote file from S3
-    df2 = pc.f_read('s3://bucket/path/to/parquet/folder', extension='parquet', metadata_nthreads=32)
+    df2 = pc.read('s3://bucket/path/to/parquet/folder', extension='parquet', metadata_nthreads=32)
 
 
 You can also find more details on the `pyarrow read_table documentation <https://arrow.apache.org/docs/python/generated/pyarrow.parquet.read_table.html>`_.

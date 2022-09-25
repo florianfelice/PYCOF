@@ -8,8 +8,58 @@ We show most important releases that included new features.
 Library versions in between are used to fix bugs and implement improvement suggested by users' feedback.
 ----
 
+*************************************************************************************************************************
+1.5.0 - September 25, 2022 - Custom cache folder in :py:meth:`pycof.sql.remote_execute_sql` and write supports json files
+*************************************************************************************************************************
+
+PYCOF can now write dictionary to json with the :py:meth:`pycof.misc.write` function. Users can then save dictionaries with one single line of code.
+
+The function :py:meth:`pycof.sql.remote_execute_sql` now supports local cache folders to save queries' output using the argument `cache_folder`.
+The default folder will remain the temporary folder created by PYCOF, by users can also save queries in a desired folder.
+This will have the advantage that cached queries will not be removed after laptop/server reboot, but users will have to clean the folder manually and regularly to avoid wasted memory usage.
+
+The function :py:meth:`pycof.data.read` now replaces the former `f_read` function.
+This change only corresponds to a rename of the function. Its usage and arguments remain exactly the same.
+
+.. warning::
+
+    Note that from version 1.6.0, the `f_read` will be fully deprecated and replaced by the current :py:meth:`pycof.data.read`.
+
+
+^^^^^^^^^^^^^^
+How to use it?
+^^^^^^^^^^^^^^
+
+.. code::
+
+    import pycof as pc
+
+    # Write a dictionary as json file
+    pc.write({"file": "test json"}, '/path/to/file.json')
+    
+    # Run a query and cache the output in a selected local folder
+    df2 = pc.remote_execute_sql('/path/to/query.sql', cache_folder='/path/to/cached/folder')
+
+    # Read a local parquet file
+    data = pc.read(df, '/path/to/file.parquet')
+    
+
+^^^^^^^^^^^^^^^^^^
+How to install it?
+^^^^^^^^^^^^^^^^^^
+
+.. code::
+
+    pip3 install pycof==1.5.0
+
+
+See more details:  :py:meth:`pycof.misc.write` / :py:meth:`pycof.sql.remote_execute_sql` / :py:meth:`pycof.data.read`
+
+----
+
+
 ***************************************************************************
-1.3.0 - May 23, 2023 - AWS credentials profile prioritized over config file
+1.3.0 - May 23, 2021 - AWS credentials profile prioritized over config file
 ***************************************************************************
 
 PYCOF now prioritizes AWS cli profiles created through the `aws configure` command over `config.json` file.

@@ -14,11 +14,11 @@ The library helps running SQL queries or send emails in a much simpler way.
 
 
 The library is pip-installable and the source code is available on my `Git <https://github.com/florianfelice/PYCOF>`_.
-For any question or suggestion of improvement, please `contact me <mailto:florian.website.mail@gmail.com>`_.
+For any question or suggestion of improvement, please `contact me <mailto:admin@florianfelice.com>`_.
 
 
 Installation
-============
+------------
 
 You can get PYCOF from `PyPI <https://pypi.org/project/pycof/>`_ with:
 
@@ -32,7 +32,7 @@ The library is supported on Windows, Linux and MacOS.
 
 
 Setup
-=====
+-----
 
 1. AWS credentials setup
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -96,10 +96,10 @@ and paste the above json after filling the empty strings (pre-filled values are 
 
 
 Available functions
-===================
+-------------------
 
 SQL
----
+^^^
 
 .. toctree::
 
@@ -107,7 +107,7 @@ SQL
 
 
 Data
-----
+^^^^
 
 .. toctree::
 
@@ -115,7 +115,7 @@ Data
 
 
 Formatting
-----------
+^^^^^^^^^^
 
 .. toctree::
 
@@ -124,7 +124,7 @@ Formatting
 
 
 Release and FAQ
-===============
+---------------
 
 .. toctree::
 
@@ -133,7 +133,7 @@ Release and FAQ
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -24,10 +24,9 @@ It will redirect you the the function's specific documentation.
 The current version of the library provides:
 
 * [**`remote_execute_sql`**](https://www.florianfelice.com/pycof/sql/sql.html#pycof.sql.remote_execute_sql): aggragated function for SQL queries to `SELECT`, `INSERT`, `DELETE` or `COPY`.
-* [**`f_read`**](https://www.florianfelice.com/pycof/datamngt/datamngt.html#pycof.data.f_read): Load any data file, regarless of the format.
+* [**`read`**](https://www.florianfelice.com/pycof/datamngt/datamngt.html#pycof.data.read): Load any data file, regarless of the format.
 * [**`send_email`**](https://www.florianfelice.com/pycof/format/format.html#pycof.format.send_email): simple function to send email to contacts in a concise way.
-* [**`verbose_display`**](https://www.florianfelice.com/pycof/format/format.html#pycof.misc.verbose_display):
-extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
+* [**`verbose_display`**](https://www.florianfelice.com/pycof/format/format.html#pycof.misc.verbose_display): extended function to [print](https://docs.python.org/3/library/functions.html#print) strings, lists, data frames and progression bar if used as a wrapper in `for` loops.
 * [**`add_zero`**](https://www.florianfelice.com/pycof/format/format.html#pycof.format.add_zero): simple function to convert `int` to `str` by adding a 0 is less than 10.
 * [**`group`**](https://www.florianfelice.com/pycof/format/format.html#pycof.format.group): will convert an `int` to a `str` with thousand seperator.
 * [**`replace_zero`**](https://www.florianfelice.com/pycof/format/format.html#pycof.format.replace_zero): will transform 0 values to `-` for display purposes.

@@ -23,12 +23,12 @@ import csv
 from types import SimpleNamespace
 
 from .misc import verbose_display, file_age, write, _get_config, _pycof_folders
-from .data import f_read
+from .data import read
 
 # #######################################################################################################################
 # Cache data from SQL
 
-def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=None, verbose=False):
+def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=None, cache_folder=None, verbose=False):
     # Parse cache_time value
     if type(cache_time) in [float, int]:
         c_time = cache_time
@@ -46,7 +46,7 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
 
     # Set the query and data paths
     query_path = _pycof_folders('queries')
-    data_path = _pycof_folders('data')
+    data_path = cache_folder if cache_folder else _pycof_folders('data')
 
     # Chec if the cached data already exists
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
@@ -55,38 +55,38 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
         if (query_type.upper() == "SELECT") & (age < c_time):
             # If file is younger than c_time, we read the cached data
             verbose_display('Reading cached data', verbose)
-            read = f_read(os.path.join(data_path, file_name))
+            sql_out = read(os.path.join(data_path, file_name))
         else:
             # Else we execute the SQL query and save the ouput + the query
             verbose_display('Execute SQL query and cache the data - updating cache', verbose)
             conn = tunnel.connector()
-            read = pd.read_sql(sql, conn)
+            sql_out = pd.read_sql(sql, conn)
             conn.close()
             write(sql, query_path + file_name, perm='w', verbose=verbose)
-            write(read, os.path.join(data_path, file_name), index=False)
+            write(sql_out, os.path.join(data_path, file_name), index=False)
     else:
         # If the file does not even exist, we execute SQL, save the query and its output
         verbose_display('Execute SQL query and cache the data', verbose)
         conn = tunnel.connector()
-        read = pd.read_sql(sql, conn)
+        sql_out = pd.read_sql(sql, conn)
         conn.close()
         write(sql, os.path.join(query_path, file_name), perm='w', verbose=verbose)
-        write(read, os.path.join(data_path, file_name), index=False)
+        write(sql_out, os.path.join(data_path, file_name), index=False)
 
     def age(fmt='seconds'):
         return file_age(file_path=os.path.join(data_path, file_name), format=fmt)
 
-    read.meta = SimpleNamespace()
-    read.meta.cache = SimpleNamespace()
-    read.meta.cache.creation_date = datetime.datetime.now() - datetime.timedelta(seconds=age())
-    read.meta.cache.cache_path = os.path.join(data_path, file_name)
-    read.meta.cache.query_path = os.path.join(query_path, file_name)
-    read.meta.cache._age_format = age_fmt
-    read.meta.cache._age_value = c_time
-    read.meta.cache._cache_time = cache_time
-    read.meta.cache.age = age
+    sql_out.meta = SimpleNamespace()
+    sql_out.meta.cache = SimpleNamespace()
+    sql_out.meta.cache.creation_date = datetime.datetime.now() - datetime.timedelta(seconds=age())
+    sql_out.meta.cache.cache_path = os.path.join(data_path, file_name)
+    sql_out.meta.cache.query_path = os.path.join(query_path, file_name)
+    sql_out.meta.cache._age_format = age_fmt
+    sql_out.meta.cache._age_value = c_time
+    sql_out.meta.cache._cache_time = cache_time
+    sql_out.meta.cache.age = age
 
-    return read
+    return sql_out
 
 
 # #######################################################################################################################
