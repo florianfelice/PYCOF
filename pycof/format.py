@@ -692,20 +692,30 @@ def GetEmails(nb_email=1, email_address='', port=993, credentials={}):
         for num in range(latest_email_id, latest_email_id - nb_email, -1):
             typ, data = mail.fetch(str(num), '(RFC822)')
             raw_email = data[0][1]  # converts byte literal to string removing b''
-            raw_email_string = raw_email.decode('utf-8')
+            try:
+                raw_email_string = raw_email.decode('utf-8')
+            except:
+                raw_email_string = ''
             email_message = email.message_from_string(raw_email_string)  # downloading attachments
             # Get email content
-            msg = email.message_from_string(str(raw_email, 'utf-8'))
-            _subj = msg['subject']
-            _from = msg['From']
-            _to = msg['To']
-            ddt = dateparser.parse(msg['Date'].strip())
+            try:
+                msg = email.message_from_string(str(raw_email, 'utf-8'))
+                _subj = msg['subject']
+                _from = msg['From']
+                _to = msg['To']
+                ddt = dateparser.parse(msg['Date'].strip())
+            except:
+                msg = ''
+                ddt = np.nan
+
             if ddt is None:
                 ddt = dateparser.parse(msg['Date'].replace('00 (PST)', ' PST').split(',')[1])
+
             try:
                 _date = ddt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=tz.tzlocal())
             except Exception:
                 _date = np.nan
+
             for_df = {'From': _from, 'Subject': _subj, 'To': _to, 'Date': _date}
 
             # Get email attachments
