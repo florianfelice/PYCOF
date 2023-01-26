@@ -99,7 +99,7 @@ def read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_
         bucket = path.replace('s3://', '').split('/')[0]
         folder_path = '/'.join(path.replace('s3://', '').split('/')[1:])
 
-        if ext.lower() in ['csv', 'txt', 'parq', 'parquet', 'html', 'json', 'js', 'py', 'sh', 'xls', 'xlsx']:
+        if ext.lower() in ['csv', 'txt', 'parq', 'parquet', 'fea', 'feather', 'html', 'json', 'js', 'py', 'sh', 'xls', 'xlsx']:
             # If file can be loaded by pandas, we do not download locally
             verbose_display('Loading the data from S3 directly', verbose)
             obj = s3.get_object(Bucket=bucket, Key=folder_path)
@@ -144,7 +144,7 @@ def read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_
                             os.remove(os.path.join(root, name))
                     # Downloading the objects from S3
                     for obj in _disp(s3bucket.objects.filter(Prefix=folder_path)):
-                        if (obj.key == folder_path) or (not any(e in obj.key for e in ['.parquet', '.parq', '.csv', '.json', '.txt'])):
+                        if (obj.key == folder_path) or (not any(e in obj.key for e in ['.parquet', '.parq', '.feather', '.fea', '.csv', '.json', '.txt'])):
                             continue
                         else:
                             s3bucket.download_file(obj.key, os.path.join(path, obj.key.split('/')[-1]))
@@ -284,6 +284,11 @@ def read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_
                 raise ValueError('Engine value not allowed')
         else:
             data = _engine(path, **kwargs)
+    # Feather
+    elif ext.lower() in ['fea', 'feather']:
+        from pyarrow.feather import read_table
+        table = read_table(path, **kwargs)
+        data = table.to_pandas()
     # Else, read-only
     elif ext.lower() in ['readonly', 'read-only', 'ro']:
         if type(path) == BytesIO:
@@ -299,7 +304,7 @@ def read(path, extension=None, parse=True, remove_comments=True, sep=',', sheet_
     # If not read-only
     return data
 
-def f_read(*args):
+def f_read(*args, **kwargs):
     """Old function to load data file. This function is on deprecation path. Consider using :py:meth:`pycof.data.read` instead.
 
     .. warning::
@@ -311,4 +316,4 @@ def f_read(*args):
     :rtype: :obj:`pandas.DataFrame`
     """
     warn('The function f_read will soon be deprecated. Consider using the function `read` instead.', DeprecationWarning, stacklevel=2)
-    return read(*args)
+    return read(*args, **kwargs)
