@@ -18,7 +18,7 @@ requirements = ['pandas>=0.24.1', 'numpy>=1.16.3', 'psycopg2-binary>=2.7.4',
                 'matplotlib>=3.1.1', 'sshtunnel>=0.3.1', 'dateparser>=1.0.0',
                 'google-api-python-client>=1.12.8', 'google-auth-httplib2>=0.0.4',
                 'google-auth-oauthlib>=0.4.2', 'google-auth>=1.24.0',
-                'httplib2>=0.18.1',
+                'httplib2>=0.18.1', 'pyarrow>=11.0.0', 'bs4>=0.0.1'
                 ]
 
 
