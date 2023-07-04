@@ -88,7 +88,7 @@ def send_email(to, subject, body, cc='', credentials={}, connection='auto'):
     msg['Subject'] = subject
 
     mail_type = 'html' if '</' in body else 'plain'
-    msg.attach(MIMEText(body), mail_type)
+    msg.attach(MIMEText(body, mail_type))
 
     text = msg.as_string()
 
