@@ -12,6 +12,12 @@ from io import StringIO, BytesIO
 
 from tqdm import tqdm
 import datetime
+import sshtunnel
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 
 ########################################################################################################################
@@ -261,3 +267,84 @@ def verbose_display(element, verbose=True, sep=' ', end='\n', return_list=False)
         disp = 0  # we don't display anything
     else:
         return(element)
+
+
+# #######################################################################################################################
+# Fake SSH tunnel for direct connections
+
+class _fake_tunnel:
+    def __init__():
+        pass
+
+    def close():
+        pass
+
+########################################################################################################################
+# SSHTunnel for email
+class EmailSSHTunnel:
+    def __init__(self, config, connection='direct', engine='default'):
+        self.connection = connection.lower()
+        self.config = config
+        self.engine = engine
+
+    def __enter__(self):
+        if self.connection == 'ssh':
+            try:
+                ssh_port = 22 if self.config.get('SSH_PORT') is None else int(self.config.get('SSH_PORT'))
+                remote_addr = 'localhost' if self.config.get('EMAIL_REMOTE_HOST') is None else self.config.get('EMAIL_REMOTE_HOST')
+                remote_port = 1025 if self.config.get('EMAIL_REMOTE_PORT') is None else int(self.config.get('EMAIL_REMOTE_PORT'))
+                hostname = '127.0.0.1' if self.config.get('EMAIL_LOCAL_HOST') is None else self.config.get('EMAIL_LOCAL_HOST')
+
+                if (self.config.get('SSH_PASSWORD') is None) & (self.config.get('SSH_KEY') is None):
+                    # Try to get the default SSH location if neither a password nor a path is provided
+                    ssh_path = os.path.join(_pycof_folders('home'), '.ssh', 'id_rsa')
+                else:
+                    ssh_path = self.config.get('SSH_KEY')
+
+                self.tunnel = sshtunnel.SSHTunnelForwarder((self.config.get('EMAIL_SMTP'), ssh_port),
+                                                           ssh_username=self.config.get('SSH_USER'),
+                                                           ssh_password=self.config.get('SSH_PASSWORD'),
+                                                           ssh_pkey=ssh_path,
+                                                           remote_bind_address=(remote_addr, remote_port))
+                self.tunnel.daemon_forward_servers = True
+                self.tunnel.connector = self._define_connector
+            except Exception:
+                raise ConnectionError('Failed to establish SSH connection with host')
+        else:
+            self.tunnel = _fake_tunnel
+            self.tunnel.connector = self._define_connector
+
+        return self.tunnel
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.tunnel.close()
+
+    def _define_connector(self):
+        """Define the SQL connector for executing SQL.
+
+        :param config: Credentials file containing authentiation information, defaults to {}.
+        :type config: :obj:`dict`, optional
+        :param engine: SQL engine to use ('Redshift', 'SQLite' or 'MySQL'), defaults to 'default'
+        :type engine: str, optional
+        :param connection: Connextion type. Cqn either be 'direct' or 'SSH', defaults to 'direct'
+        :type connection: str, optional
+
+        :return: Connector, cursor and tunnel
+        """
+        user = self.config.get('EMAIL_USER')
+        password = self.config.get('EMAIL_PASSWORD')
+        hostname = self.config.get('EMAIL_SMTP')
+        port = self.config.get('EMAIL_PORT')
+
+        if self.connection.lower() == 'ssh':
+            hostname = '127.0.0.1' if self.config.get('EMAIL_REMOTE_HOST') is None else self.config.get('EMAIL_REMOTE_HOST')
+            self.tunnel.start()
+            port = self.tunnel.local_bind_port
+
+        try:
+            connector = smtplib.SMTP(hostname, port)
+            connector.login(user, password)
+        except Exception:
+            raise ConnectionError('Failed to connect to the email server')
+
+        return connector

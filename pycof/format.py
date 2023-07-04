@@ -33,7 +33,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from .sqlhelper import _get_config, _get_credentials
-from .misc import file_age, verbose_display, _pycof_folders
+from .misc import file_age, verbose_display, _pycof_folders, EmailSSHTunnel
 
 # Define default Google API scopes
 default_scopes = ['https://mail.google.com/', 'https://www.googleapis.com/auth/calendar.readonly']
@@ -42,7 +42,7 @@ default_scopes = ['https://mail.google.com/', 'https://www.googleapis.com/auth/c
 #######################################################################################################################
 
 # Send an Email
-def send_email(to, subject, body, cc='', credentials={}):
+def send_email(to, subject, body, cc='', credentials={}, connection='auto'):
     """Simplified function to send emails.
     Will look at the credentials at :obj:`/etc/.pycof/config.json`. User can also pass a dictionnary for credentials.
 
@@ -77,30 +77,39 @@ def send_email(to, subject, body, cc='', credentials={}):
         >>> pycof.send_email(to="test@domain.com", body=content, subject="Hello world!")
     """
     config = _get_config(credentials)
+
+    if connection.lower() == 'auto':
+        pattern = re.compile("^([0-9]+.[0-9]+.[0-9]+.[0-9]+)+$")
+        connection = 'direct' if pattern.match(config.get('EMAIL_SMTP')) else 'ssh'
     msg = MIMEMultipart()
-    msg['From'] = config.get('EMAIL_SENDER')
+    msg['From'] = config.get('EMAIL_USER')
     msg['To'] = to
-    msg['Cc'] = '' if cc == '' else cc
+    # msg['Cc'] = '' if cc == '' else cc
     msg['Subject'] = subject
 
     mail_type = 'html' if '</' in body else 'plain'
-    msg.attach(MIMEText(body, mail_type))
+    msg.attach(MIMEText(body))
 
     text = msg.as_string()
 
-    # Server login
-    try:
-        port = str(config.get('EMAIL_PORT'))
-    except Exception:
-        port = '587'  # Default Google port number
-    connection = config.get('EMAIL_SMTP') + ':' + port
-    server = smtplib.SMTP(connection)
-    server.starttls()
-    server.login(user=config.get('EMAIL_USER'), password=config.get('EMAIL_PASSWORD'))
+    with EmailSSHTunnel(config=config, connection=connection) as tunnel:
+        conn = tunnel.connector()
+        conn.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
+        conn.quit()
+        # conn.sendmail('noreply@florianfelice.com','florian@florianfelice.com',msg.as_string())
+    # # Server login
+    # try:
+    #     port = str(config.get('EMAIL_PORT'))
+    # except Exception:
+    #     port = '587'  # Default Google port number
+    # connection = config.get('EMAIL_SMTP') + ':' + port
+    # server = smtplib.SMTP(connection)
+    # server.starttls()
+    # server.login(user=config.get('EMAIL_USER'), password=config.get('EMAIL_PASSWORD'))
 
-    # Send email
-    server.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
-    server.quit()
+    # # Send email
+    # server.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
+    # server.quit()
 
 # Send an email from Gmail
 class google_email:

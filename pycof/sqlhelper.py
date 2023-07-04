@@ -22,7 +22,7 @@ import warnings
 import csv
 from types import SimpleNamespace
 
-from .misc import verbose_display, file_age, write, _get_config, _pycof_folders
+from .misc import verbose_display, file_age, write, _get_config, _pycof_folders, _fake_tunnel
 from .data import read
 
 # #######################################################################################################################
@@ -143,16 +143,6 @@ def _get_credentials(config, profile_name=None, connection='direct'):
 
     return config
 
-
-# #######################################################################################################################
-# Fake SSH tunnel for direct connections
-
-class _fake_tunnel:
-    def __init__():
-        pass
-
-    def close():
-        pass
 
 # #######################################################################################################################
 # Get SSH tunnel
