@@ -97,19 +97,6 @@ def send_email(to, subject, body, cc='', credentials={}, connection='auto'):
         conn.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
         conn.quit()
         # conn.sendmail('noreply@florianfelice.com','florian@florianfelice.com',msg.as_string())
-    # # Server login
-    # try:
-    #     port = str(config.get('EMAIL_PORT'))
-    # except Exception:
-    #     port = '587'  # Default Google port number
-    # connection = config.get('EMAIL_SMTP') + ':' + port
-    # server = smtplib.SMTP(connection)
-    # server.starttls()
-    # server.login(user=config.get('EMAIL_USER'), password=config.get('EMAIL_PASSWORD'))
-
-    # # Send email
-    # server.sendmail(config.get('EMAIL_USER'), [to, '', cc], text)
-    # server.quit()
 
 # Send an email from Gmail
 class google_email:

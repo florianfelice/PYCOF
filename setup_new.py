@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pycof",
-    version="1.5.4",
+    version="1.5.5",
     author="Florian Felice",
     author_email="admin@florianfelice.com",
     description="A package for commonly used functions",
