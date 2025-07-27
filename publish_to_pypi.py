@@ -6,6 +6,7 @@ import sys
 import os
 import getpass
 import json
+from pathlib import Path
 
 import argparse
 
@@ -31,18 +32,12 @@ parser.add_argument("-m", "--message", default="", help="Message for the Git com
 
 args = parser.parse_args()
 
-if sys.platform in ['darwin']:
-    path = f'/Users/{getpass.getuser()}/Documents/'
-elif sys.platform in ['linux']:
-    path = f'/home/{getpass.getuser()}/'
-elif sys.platform in ['win32']:
-    path = f'C:/Users/{getpass.getuser()}/Documents/'
-
-lib_path = path + library
+lib_path = os.path.join(Path(__file__).parent.resolve())
 
 # Set up working directory
 os.chdir(lib_path)
 
+print(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
 
 # Define new version number is not provided in arguments
 if args.version is None:
@@ -65,8 +60,9 @@ if args.version is None:
 else:
     new_version = args.version
 
+
 # Load the setup template file
-with open(lib_path + '/setup_template.py') as f:
+with open(os.path.join(lib_path, 'setup_template.py')) as f:
     template = f.read()
 
 all_reqs = '"' + '",\n          "'.join(requirements) + '"'
@@ -75,27 +71,27 @@ all_reqs = '"' + '",\n          "'.join(requirements) + '"'
 template = template.format(library=library.lower(), version=new_version, desc=desc, requirements=all_reqs)
 
 # And write the new setup file
-with open(lib_path + '/setup_new.py', "w") as f:
+with open(os.path.join(lib_path, 'setup_new.py'), "w") as f:
     f.write(template)
 
 
 # Load the init template file
-with open(lib_path + f'/{library.lower()}/init_template.py') as f:
+with open(os.path.join(lib_path, f'{library.lower()}/init_template.py')) as f:
     init_template = f.read()
 
 # Update init_template
 init_template = init_template.format(version=new_version)
 
 # And write the new init file
-with open(lib_path + f'/{library.lower()}/__init__.py', "w") as f:
+with open(os.path.join(lib_path, f'{library.lower()}/__init__.py'), "w") as f:
     f.write(init_template)
 
 
 # Delete files to load
-os.system(f'rm {lib_path}/dist/*')
+os.system(f'rm ' + os.path.join(lib_path, 'dist', '*'))
 
 # Execute the setup file
-os.system(f'python3 {lib_path}/setup_new.py sdist bdist_wheel')
+os.system(f'python3 {os.path.join(lib_path, "setup_new.py")} sdist bdist_wheel')
 
 
 # Load pypi credentials
@@ -109,19 +105,19 @@ pwd = config.get('PYPI_PASSWORD')
 if args.test:
     # If test, we upload on pypi test
     test_dest = '--repository-url https://test.pypi.org/legacy/'
-    os.system(f'python3 -m twine upload {test_dest} {lib_path}/dist/*')
+    os.system(f'python3 -m twine upload {test_dest} {os.path.join(lib_path, "dist", "*")}')
 else:
     # Else we publish on standard pypi
-    os.system(f'python3 -m twine upload {lib_path}/dist/*')
+    os.system(f'python3 -m twine upload {os.path.join(lib_path, "dist", "*")}')
 
 
 # Commit to git and push
 if args.publish:
     os.system("git add --all")
-    os.system(f"git tag -a v{new_version} -m 'Version {new_version} on pypi. {args.message}'")
     os.system(f"git commit -a -m 'Upload version {new_version} to pypi. {args.message}'")
-    os.system(f"git push origin v{new_version}")
-    os.system("git push")
+    os.system(f"git tag -a v{new_version} -m 'Version {new_version} on pypi. {args.message}'")
+    # os.system(f"git push origin v{new_version}")
+    os.system("git push origin --tags && git push")
     git_update = 'and changes pushed to git'
 else:
     git_update = ""

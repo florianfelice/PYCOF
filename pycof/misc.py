@@ -65,6 +65,26 @@ def _pycof_folders(output=None, verbose=False):
         except PermissionError as err:
             raise PermissionError(f"""Could not create the PYCOF temp data folder, permission denied: {folds_d}.
                     Please create folder with: sudo mkdir {folds_d} or run your script with super-user.""")
+    
+    # S3 temp folder
+    folds_s3 = os.path.join(temp_path, 'pycof', 'cache', 's3') + os.sep
+    if not os.path.exists(folds_s3):
+        try:
+            os.makedirs(folds_s3)
+            _created += 1
+        except PermissionError as err:
+            raise PermissionError(f"""Could not create the PYCOF temp s3 folder, permission denied: {folds_s3}.
+                    Please create folder with: sudo mkdir {folds_s3} or run your script with super-user.""")
+    
+    # Models temp folder
+    folds_models = os.path.join(temp_path, 'pycof', 'cache', 'models') + os.sep
+    if not os.path.exists(folds_models):
+        try:
+            os.makedirs(folds_models)
+            _created += 1
+        except PermissionError as err:
+            raise PermissionError(f"""Could not create the PYCOF temp models folder, permission denied: {folds_models}.
+                    Please create folder with: sudo mkdir {folds_models} or run your script with super-user.""")
 
     # Return path if asked by user
     if output in ['tmp', 'temp']:
@@ -77,6 +97,10 @@ def _pycof_folders(output=None, verbose=False):
         return folds_d
     elif output == 'home':
         return home
+    elif output == "s3":
+        return folds_s3
+    elif output == 'models':
+        return folds_models
     elif verbose:
         print(f'PYCOF folder created: {_created}')
 
