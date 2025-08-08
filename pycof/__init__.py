@@ -4,4 +4,4 @@ from .format import *
 from .misc import _get_config as get_config
 from .misc import _pycof_folders as pycof_folders
 
-__version__ = 'v1.5.10'
+__version__ = '1.5.11'

@@ -37,8 +37,6 @@ lib_path = os.path.join(Path(__file__).parent.resolve())
 # Set up working directory
 os.chdir(lib_path)
 
-print(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
-
 # Define new version number is not provided in arguments
 if args.version is None:
     # Get the latest version from git tags
@@ -47,11 +45,10 @@ if args.version is None:
         sys.exit(1)
     version = max(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
     version_splitted = version.split('.')
-    print(version_splitted)
     # Define new version
     version_splitted_new = version_splitted.copy()
     version_splitted_new[-1] = str(int(version_splitted_new[-1]) + 1)
-    new_version = '.'.join(version_splitted_new)
+    new_version = '.'.join(version_splitted_new).split("v")[-1]
 else:
     new_version = args.version
 
