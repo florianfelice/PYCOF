@@ -24,14 +24,15 @@ from email.mime.text import MIMEText
 # Get config file
 
 def _pycof_folders(output=None, verbose=False):
+    pycof_fold = os.environ.get('PYCOF_PATH', os.sep)
     # Define the root folder depending on the OS
     if sys.platform in ['win32', 'win64', 'cygwin', 'msys']:
         temp_path = os.environ['TEMP'] + os.sep
         home = os.path.expanduser('~')
         creds_fold = os.path.join(home, '.pycof')  + os.sep
     else:
-        temp_path = os.path.join(os.sep, 'tmp') + os.sep
-        creds_fold = os.path.join(os.sep, 'etc', '.pycof') + os.sep
+        temp_path = os.path.join(pycof_fold, 'tmp') + os.sep
+        creds_fold = os.path.join(pycof_fold, 'etc', '.pycof') + os.sep
         home = os.path.expanduser('~')
 
     # Initialize the creation count variable

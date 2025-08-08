@@ -41,25 +41,19 @@ print(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
 
 # Define new version number is not provided in arguments
 if args.version is None:
-    if args.test:
-        url = f'https://test.pypi.org/project/{library}/'
-    else:
-        url = f'https://pypi.org/project/{library}/'
-
-    response = get(url)
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    version_tag = soup.findAll("h1", {"class": "package-header__name"})
-    version = str(version_tag[0]).split('\n')[1].split(' ')[-1]
+    # Get the latest version from git tags
+    if not os.path.exists(os.path.join(lib_path, ".git", "refs", "tags")):
+        print("No git tags found. Please create a tag before publishing.")
+        sys.exit(1)
+    version = max(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
     version_splitted = version.split('.')
+    print(version_splitted)
     # Define new version
     version_splitted_new = version_splitted.copy()
-    version_splitted_new[2] = str(int(version_splitted_new[2]) + 1)
+    version_splitted_new[-1] = str(int(version_splitted_new[-1]) + 1)
     new_version = '.'.join(version_splitted_new)
 else:
     new_version = args.version
-
 
 # Load the setup template file
 with open(os.path.join(lib_path, 'setup_template.py')) as f:
