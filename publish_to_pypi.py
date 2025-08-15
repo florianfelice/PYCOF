@@ -100,7 +100,7 @@ if args.test:
     os.system(f'python3 -m twine upload {test_dest} {os.path.join(lib_path, "dist", "*")}')
 else:
     # Else we publish on standard pypi
-    os.system(f'python3 -m twine upload {os.path.join(lib_path, "dist", "*")}')
+    os.system(f'python3 -m twine upload {os.path.join(lib_path, "dist", "*")} --verbose')
 
 
 # Commit to git and push
