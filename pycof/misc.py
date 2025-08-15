@@ -17,6 +17,8 @@ import sshtunnel
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import logging
+import colorlog
 
 
 
@@ -373,3 +375,47 @@ class EmailSSHTunnel:
             raise ConnectionError('Failed to connect to the email server')
 
         return connector
+
+
+########################################################################################################################
+# Logging setup
+def setup_logging(file=__name__, logging_level=logging.INFO):
+    """
+    Set up logging configuration.
+    """
+    # Create a logger
+    logger = logging.getLogger(file)
+    logger.setLevel(logging_level)
+
+    # Create handlers
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging_level)
+
+    # Create formatters and add them to the handlers
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(asctime)s [%(levelname)s] %(name)s %(reset)s %(message_log_color)s - %(message)s",
+        datefmt='%Y-%m-%d %H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG': 'light_black',
+            'INFO': 'blue',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'bold_red',
+        },
+        secondary_log_colors={
+            'message': {
+                'DEBUG': 'light_black',
+                'INFO': 'white',
+                'WARNING': 'light_yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'red',
+            }
+        }
+    )
+    console_handler.setFormatter(formatter)
+
+    # Add the handlers to the logger
+    logger.addHandler(console_handler)
+
+    return logger

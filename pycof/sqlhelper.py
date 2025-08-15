@@ -2,7 +2,6 @@ import boto3
 import botocore
 
 import sshtunnel
-import pymysql
 import psycopg2
 import sqlite3
 
@@ -15,7 +14,7 @@ from tqdm import tqdm
 import os
 import sys
 import getpass
-import json
+import sqlalchemy as sa
 import datetime
 import hashlib
 import warnings
@@ -60,6 +59,7 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
             # Else we execute the SQL query and save the ouput + the query
             verbose_display('Execute SQL query and cache the data - updating cache', verbose)
             conn = tunnel.connector()
+            warnings.filterwarnings("ignore", category=UserWarning, message='.*pandas only supports SQLAlchemy connectable.*')
             sql_out = pd.read_sql(sql, conn)
             conn.close()
             write(sql, query_path + file_name, perm='w', verbose=verbose)
@@ -68,6 +68,7 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
         # If the file does not even exist, we execute SQL, save the query and its output
         verbose_display('Execute SQL query and cache the data', verbose)
         conn = tunnel.connector()
+        warnings.filterwarnings("ignore", category=UserWarning, message='.*pandas only supports SQLAlchemy connectable.*')
         sql_out = pd.read_sql(sql, conn)
         conn.close()
         write(sql, os.path.join(query_path, file_name), perm='w', verbose=verbose)
@@ -229,11 +230,15 @@ class SSHTunnel:
         else:
             try:
                 # Add new encoder of numpy.float64
-                pymysql.converters.encoders[np.float64] = pymysql.converters.escape_float
-                pymysql.converters.conversions = pymysql.converters.encoders.copy()
-                pymysql.converters.conversions.update(pymysql.converters.decoders)
-                # Create connection
-                connector = pymysql.connect(host=hostname, port=int(port), user=user, password=password)
+                # pymysql.converters.encoders[np.float64] = pymysql.converters.escape_float
+                # pymysql.converters.conversions = pymysql.converters.encoders.copy()
+                # pymysql.converters.conversions.update(pymysql.converters.decoders)
+                # # Create connection
+                # connector = pymysql.connect(host=hostname, port=int(port), user=user, password=password)
+
+                params = "{user}:{password}@{hostname}:{port}/".format(user=user, password=password, hostname=hostname, port=port)
+
+                connector = sa.create_engine("mysql+pymysql://{}".format(params)).raw_connection()
             except Exception:
                 raise ConnectionError('Failed to connect to the MySQL database')
 
