@@ -45,6 +45,7 @@ if args.version is None:
         print("No git tags found. Please create a tag before publishing.")
         sys.exit(1)
     version = max(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
+    print(f"Latest version found is {version}.")
     version_splitted = version.split('.')
     # Define new version
     version_splitted_new = version_splitted.copy()
