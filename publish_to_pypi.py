@@ -50,6 +50,7 @@ if args.version is None:
     version_splitted_new = version_splitted.copy()
     version_splitted_new[-1] = str(int(version_splitted_new[-1]) + 1)
     new_version = '.'.join(version_splitted_new).split("v")[-1]
+    print(f"New version number is {new_version}.")
 else:
     new_version = args.version
 
