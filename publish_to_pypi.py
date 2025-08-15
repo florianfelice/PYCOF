@@ -7,6 +7,7 @@ import os
 import getpass
 import json
 from pathlib import Path
+from packaging import version
 
 import argparse
 
@@ -44,7 +45,8 @@ if args.version is None:
     if not os.path.exists(os.path.join(lib_path, ".git", "refs", "tags")):
         print("No git tags found. Please create a tag before publishing.")
         sys.exit(1)
-    version = max(os.listdir(os.path.join(lib_path, ".git", "refs", "tags")))
+    tags = os.listdir(os.path.join(lib_path, ".git", "refs", "tags"))
+    version = max(tags, key=lambda x: version.parse(x.lstrip('v')))
     print(f"Latest version found is {version}.")
     version_splitted = version.split('.')
     # Define new version
