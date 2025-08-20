@@ -51,7 +51,8 @@ def _cache(sql, tunnel, query_type="SELECT", cache_time='24h', cache_file_name=N
     if (query_type.upper() == "SELECT") & (file_name in os.listdir(data_path)):
         # If file exists, checks its age
         age = file_age(os.path.join(data_path, file_name), format=age_fmt)
-        if (query_type.upper() == "SELECT") & (age < c_time):
+        size = os.path.getsize(os.path.join(data_path, file_name))
+        if (query_type.upper() == "SELECT") & (age < c_time) & (size > 4):
             # If file is younger than c_time, we read the cached data
             verbose_display('Reading cached data', verbose)
             sql_out = read(os.path.join(data_path, file_name))
