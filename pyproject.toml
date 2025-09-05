@@ -1,0 +1,146 @@
+[project]
+name = "PYCOF"
+dynamic = ["version", "description", "readme", "license", "authors"]
+description = "PYthon COmmon Functions"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "boto3>=1.16.19",
+    "bs4>=0.0.1",
+    "colorlog>=6.9.0",
+    "dateparser>=1.0.0",
+    "google-api-python-client>=1.12.8",
+    "google-auth-httplib2>=0.0.4",
+    "google-auth-oauthlib>=0.4.2",
+    "google-auth>=1.24.0",
+    "httplib2>=0.18.1",
+    "matplotlib>=3.1.1",
+    "numpy>=1.16.3",
+    "pandas>=2.3.2",
+    "paramiko>=4.0.0",
+    "psycopg2-binary>=2.7.4",
+    "pyarrow>=21.0.0",
+    "pymysql>=0.9.3",
+    "sqlalchemy>=2.0.43",
+    "sshtunnel>=0.3.1",
+    "tqdm>=4.35.0",
+    "xlrd>=1.2.0",
+]
+license = "MIT"
+authors = [{name= "Florian Felice", email = "admin@florianfelice.com"}]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "black[jupyter]>=25.1.0",
+    "isort>=5.13.2",
+    "flake8>=7.3.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.0.0",
+    "poetry-dynamic-versioning>=1.0.0",
+    "python-semantic-release>=8.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/florianfelice/PYCOF"
+Repository = "https://github.com/florianfelice/PYCOF"
+
+[tool.poetry]
+readme = "README.md"
+packages = [{include = "pycof"}]
+version = "1.6.0"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+boto3 = "^1.16.19"
+bs4 = "^0.0.1"
+colorlog = "^6.9.0"
+dateparser = "^1.0.0"
+google-api-python-client = "^1.12.8"
+google-auth-httplib2 = "^0.0.4"
+google-auth-oauthlib = "^0.4.2"
+google-auth = "^1.24.0"
+httplib2 = "^0.18.1"
+matplotlib = "^3.1.1"
+numpy = "^1.16.3"
+pandas = "^2.3.2"
+paramiko = "^4.0.0"
+psycopg2-binary = "^2.7.4"
+pyarrow = "^21.0.0"
+pymysql = "^0.9.3"
+sqlalchemy = "^2.0.43"
+sshtunnel = "^0.3.1"
+tqdm = "^4.35.0"
+xlrd = "^1.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = {extras = ["jupyter"], version = "^25.1.0"}
+isort = "^5.13.2"
+flake8 = "^7.3.0"
+mypy = "^1.8.0"
+pre-commit = "^3.0.0"
+poetry-dynamic-versioning = "^1.0.0"
+python-semantic-release = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
+format-jinja = "{{base}}"
+
+[tool.poetry-dynamic-versioning.substitution]
+files = ["pycof/about.py"]
+patterns = [
+    "(^_version\\\\s*=\\\\s*)['\"]([^'\"]*)['\"]",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line-length = 120
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:tool.poetry.version"]
+version_variables = [
+    "pycof/about.py:_version",
+]
+build_command = "poetry build"
+dist_path = "dist/"
+upload_to_pypi = false
+upload_to_release = true
+hvcs = "github"
+commit_message = "chore(release): v{version}"
+
+[tool.semantic_release.changelog]
+template_dir = "templates"
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.changelog.environment]
+block_start_string = "{%"
+block_end_string = "%}"
+variable_start_string = "{{"
+variable_end_string = "}}"
+comment_start_string = "{#"
+comment_end_string = "#}"
+trim_blocks = false
+lstrip_blocks = false
+
+[tool.flake8]
+max-line-length = 120
+ignore = ["E203", "E266", "E501", "W503", "F403", "F401", "E402", "E101", "W191"]
+max-complexity = 18
+select = ["B", "C", "E", "F", "W", "T4", "B9"]

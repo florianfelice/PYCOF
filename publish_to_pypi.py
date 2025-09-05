@@ -1,28 +1,20 @@
 #!/usr/bin/env python3
-from requests import get
-from bs4 import BeautifulSoup
-
-import sys
-import os
-import getpass
-import json
-from pathlib import Path
-from packaging import version
-
 import argparse
+import glob
+import os
+import subprocess
+import sys
+from pathlib import Path
 
+# Import PYCOF's config system
+try:
+    import pycof as pc
+except ImportError:
+    print("Error: Could not import pycof. Make sure it's installed or run from the project directory.")
+    sys.exit(1)
 
 # Define
-library = 'PYCOF'
-desc = "A package for commonly used functions"
-requirements = ['pandas>=0.24.1', 'numpy>=1.16.3', 'psycopg2-binary>=2.7.4',
-                'sqlalchemy>=2.0.42', 'tqdm>=4.35.0', 'boto3>=1.16.19', 'xlrd>=1.2.0',
-                'matplotlib>=3.1.1', 'sshtunnel>=0.3.1', 'dateparser>=1.0.0',
-                'google-api-python-client>=1.12.8', 'google-auth-httplib2>=0.0.4',
-                'google-auth-oauthlib>=0.4.2', 'google-auth>=1.24.0',
-                'httplib2>=0.18.1', 'pyarrow>=11.0.0', 'bs4>=0.0.1',
-                'colorlog>=6.9.0'
-                ]
+library = "PYCOF"
 
 
 # Collect arguments
@@ -39,83 +31,115 @@ lib_path = os.path.join(Path(__file__).parent.resolve())
 # Set up working directory
 os.chdir(lib_path)
 
-# Define new version number is not provided in arguments
+# Define new version number if not provided in arguments
 if args.version is None:
-    # Get the latest version from git tags
-    if not os.path.exists(os.path.join(lib_path, ".git", "refs", "tags")):
-        print("No git tags found. Please create a tag before publishing.")
+    # Get the current version from git tags (since we're using poetry-dynamic-versioning)
+    try:
+        result = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], capture_output=True, text=True, check=True)
+        current_tag = result.stdout.strip()
+        current_version = current_tag.lstrip('v')  # Remove 'v' prefix if present
+        print(f"Current version found is {current_version}.")
+        
+        # Parse version and increment patch version
+        version_parts = current_version.split(".")
+        version_parts[-1] = str(int(version_parts[-1]) + 1)
+        new_version = ".".join(version_parts)
+        print(f"New version number will be {new_version}.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting current version from git tags: {e}")
+        print("Make sure you have at least one git tag in the format v1.0.0")
         sys.exit(1)
-    tags = os.listdir(os.path.join(lib_path, ".git", "refs", "tags"))
-    version = max(tags, key=lambda x: version.parse(x.lstrip('v')))
-    print(f"Latest version found is {version}.")
-    version_splitted = version.split('.')
-    # Define new version
-    version_splitted_new = version_splitted.copy()
-    version_splitted_new[-1] = str(int(version_splitted_new[-1]) + 1)
-    new_version = '.'.join(version_splitted_new).split("v")[-1]
-    print(f"New version number is {new_version}.")
 else:
     new_version = args.version
 
-# Load the setup template file
-with open(os.path.join(lib_path, 'setup_template.py')) as f:
-    template = f.read()
+print(f"Target version: {new_version}")
 
-all_reqs = '"' + '",\n          "'.join(requirements) + '"'
-
-# Update template
-template = template.format(library=library.lower(), version=new_version, desc=desc, requirements=all_reqs)
-
-# And write the new setup file
-with open(os.path.join(lib_path, 'setup_new.py'), "w") as f:
-    f.write(template)
-
-
-# Load the init template file
-with open(os.path.join(lib_path, f'{library.lower()}/init_template.py')) as f:
-    init_template = f.read()
-
-# Update init_template
-init_template = init_template.format(version=new_version)
-
-# And write the new init file
-with open(os.path.join(lib_path, f'{library.lower()}/__init__.py'), "w") as f:
-    f.write(init_template)
-
-
-# Delete files to load
-os.system(f'rm ' + os.path.join(lib_path, 'dist', '*'))
-
-# Execute the setup file
-os.system(f'python3 {os.path.join(lib_path, "setup_new.py")} sdist bdist_wheel')
+# Configure Poetry with PyPI tokens from pycof config
+try:
+    config = pc.get_config()
+    pypi_token = config.get("PYPI_TOKEN")
+    test_pypi_token = config.get("TEST_PYPI_TOKEN")  # Optional separate token for test PyPI
+    
+    if pypi_token:
+        subprocess.run(['poetry', 'config', 'pypi-token.pypi', pypi_token], check=True)
+        print("✓ PyPI token configured")
+    else:
+        print("Warning: PYPI_TOKEN not found in config. Make sure Poetry is configured with PyPI credentials.")
+    
+    if test_pypi_token:
+        subprocess.run(['poetry', 'config', 'pypi-token.testpypi', test_pypi_token], check=True)
+        print("✓ Test PyPI token configured")
+    elif args.test:
+        print("Warning: TEST_PYPI_TOKEN not found in config. Using main PYPI_TOKEN for test PyPI.")
+        if pypi_token:
+            subprocess.run(['poetry', 'config', 'pypi-token.testpypi', pypi_token], check=True)
+            
+except Exception as e:
+    print(f"Warning: Could not configure PyPI tokens: {e}")
+    print("Make sure Poetry is manually configured with tokens or credentials are available.")
 
 
-# Load pypi credentials
-with open('/etc/.pycof/config.json') as config_file:
-    config = json.load(config_file)
+# Create git tag for the new version (required for poetry-dynamic-versioning)
+# Note: poetry-dynamic-versioning will automatically read this tag during build
+# and inject the version into the package, overriding any version in pyproject.toml
+try:
+    subprocess.run(['git', 'tag', '-a', f'v{new_version}', '-m', f'Version {new_version}'], check=True)
+    print(f"Created git tag v{new_version}")
+except subprocess.CalledProcessError as e:
+    print(f"Error creating git tag: {e}")
+    print("Tag might already exist. Continuing...")
 
-user = config.get('PYPI_USER')
-pwd = config.get('PYPI_PASSWORD')
+# Clean and build with Poetry
+try:
+    # Clean dist directory
+    subprocess.run(['rm', '-rf', 'dist/*'], shell=True, check=False)
+    
+    # Build with Poetry (dynamic versioning will read the version from the git tag)
+    print("Building package with Poetry (using automatic versioning from git tags)...")
+    subprocess.run(['poetry', 'build'], check=True)
+    print("Package built successfully with Poetry")
+    
+    # Show what version was actually built
+    import glob
+    wheel_files = glob.glob('dist/*.whl')
+    if wheel_files:
+        wheel_name = os.path.basename(wheel_files[0])
+        print(f"Built package: {wheel_name}")
+        
+except subprocess.CalledProcessError as e:
+    print(f"Error building package: {e}")
+    sys.exit(1)
 
-# Load to pypi.org
-if args.test:
-    # If test, we upload on pypi test
-    test_dest = '--repository-url https://test.pypi.org/legacy/'
-    os.system(f'python3 -m twine upload {test_dest} {os.path.join(lib_path, "dist", "*")}')
-else:
-    # Else we publish on standard pypi
-    os.system(f'python3 -m twine upload {os.path.join(lib_path, "dist", "*")}')
+# Publish with Poetry
+try:
+    if args.test:
+        # Publish to test PyPI
+        subprocess.run(['poetry', 'publish', '--repository', 'testpypi'], check=True)
+        print("Package published to test PyPI successfully")
+    else:
+        # Publish to PyPI
+        subprocess.run(['poetry', 'publish'], check=True)
+        print("Package published to PyPI successfully")
+except subprocess.CalledProcessError as e:
+    print(f"Error publishing package: {e}")
+    sys.exit(1)
 
 
 # Commit to git and push
 if args.publish:
-    os.system("git add --all")
-    os.system(f"git commit -a -m 'Upload version {new_version} to pypi. {args.message}'")
-    os.system(f"git tag -a v{new_version} -m 'Version {new_version} on pypi. {args.message}'")
-    # os.system(f"git push origin v{new_version}")
-    os.system("git push origin --tags && git push")
-    git_update = 'and changes pushed to git'
+    try:
+        subprocess.run(['git', 'add', '--all'], check=True)
+        subprocess.run(['git', 'commit', '-a', '-m', f'Upload version {new_version} to pypi. {args.message}'], check=True)
+        # Tag was already created above, so just push it
+        subprocess.run(['git', 'push', 'origin', '--tags'], check=True)
+        subprocess.run(['git', 'push'], check=True)
+        git_update = "and changes pushed to git"
+        print("Git commit and push completed successfully")
+    except subprocess.CalledProcessError as e:
+        print(f"Error with git operations: {e}")
+        git_update = "but git operations failed"
 else:
     git_update = ""
+    print("Note: Git tag was created but not pushed. Use -p flag to push to git.")
 
-print(f'\n\n New version {new_version} loaded on PyPi {git_update}')
+print(f"\n\n New version {new_version} loaded on PyPi {git_update}")

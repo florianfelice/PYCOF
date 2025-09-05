@@ -36,13 +36,13 @@ How to use it?
 
     # Write a dictionary as json file
     pc.write({"file": "test json"}, '/path/to/file.json')
-    
+
     # Run a query and cache the output in a selected local folder
     df2 = pc.remote_execute_sql('/path/to/query.sql', cache_folder='/path/to/cached/folder')
 
     # Read a local parquet file
     data = pc.read(df, '/path/to/file.parquet')
-    
+
 
 ^^^^^^^^^^^^^^^^^^
 How to install it?
@@ -81,10 +81,10 @@ How to use it?
 
     # Load a parquet file from Amazon S3
     df = pc.f_read('s3://bucket/path/to/file.parquet', profile_name='default')
-    
+
     # Write a file on Amazon S3
     pc.write(df, 's3://bucket/path/to/file2.parquet', profile_name='default')
-    
+
     # Run a query on a Redshift cluster
     df2 = pc.remote_execute_sql('/path/to/query.sql', connection='IAM', profile_name='default')
 

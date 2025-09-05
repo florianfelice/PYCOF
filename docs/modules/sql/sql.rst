@@ -66,7 +66,7 @@ Pass your credentials in your code
 Though it is highly not recommended, you can pass your credentials locally to the functions with the argument credentials.
 You can then create a dictionnary using the same keys as described in previous section.
 
-The preferred option is to provide the json file's path to the credentials argument. 
+The preferred option is to provide the json file's path to the credentials argument.
 
 ----
 
@@ -162,7 +162,7 @@ Example:
 Consider you have a first file :obj:`/path/to/simple_query.sql`:
 
 .. code-block:: sql
-    
+
     SELECT *
     FROM schema.table
     WHERE 1 = 1
@@ -189,7 +189,7 @@ Just make sure you do not use same name as arguments in :py:meth:`pycof.sql.remo
 
 
 .. code-block:: sql
-    
+
     SELECT *
     FROM schema.table
     WHERE column1 = '{_value1}'
@@ -218,7 +218,7 @@ This is a much safer approach to connect to a Redshift cluster than using direct
     TIP: When using PYCOF on EC2 or SageMaker, you can also play with `IAM roles <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html>`_ and not specify the access and secret keys.
     Roles do not depend on credentials. Just make sure your host has the required roles attached.
 
-Example: 
+Example:
 
 .. code-block:: python
 

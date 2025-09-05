@@ -10,7 +10,7 @@ PYCOF
     :target: https://github.com/florianfelice/PYCOF
 
 PYCOF is a library to group some useful functions on Python.
-The library helps running SQL queries or send emails in a much simpler way. 
+The library helps running SQL queries or send emails in a much simpler way.
 
 
 The library is pip-installable and the source code is available on my `Git <https://github.com/florianfelice/PYCOF>`_.

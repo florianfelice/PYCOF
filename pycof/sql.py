@@ -1,21 +1,17 @@
-import os
-import sys
+import datetime
 import getpass
+import os
+import re
+import sys
 import warnings
 
-import re
-
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from tqdm import tqdm
-import datetime
 
-from .sqlhelper import _get_config, _get_credentials, SSHTunnel
-from .sqlhelper import _insert_data, _cache
-from .data import write, read
+from .data import read, write
 from .format import file_age, verbose_display
-
+from .sqlhelper import SSHTunnel, _cache, _get_config, _get_credentials, _insert_data, create_ssh_tunnel
 
 #######################################################################################################################
 
@@ -24,9 +20,25 @@ from .format import file_age, verbose_display
 
 #######################################################################################################################
 
+
 # Publish or read from DB
-def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentials={}, profile_name=None, verbose=True, connection='direct', autofill_nan=True,
-                       engine='default', cache=False, cache_name=None, cache_folder=None, *args, **kwargs):
+def remote_execute_sql(
+    sql_query="",
+    query_type="",
+    table="",
+    data={},
+    credentials={},
+    profile_name=None,
+    verbose=True,
+    connection="direct",
+    autofill_nan=True,
+    engine="default",
+    cache=False,
+    cache_name=None,
+    cache_folder=None,
+    *args,
+    **kwargs,
+):
     """Simplified function for executing SQL queries. Will look at the credentials at :obj:`/etc/.pycof/config.json`. User can also pass a dictionnary for
     credentials.
 
@@ -95,41 +107,43 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # Define the SQL type
-    all_query_types = ['SELECT', 'INSERT', 'DELETE', 'COPY', 'UNLOAD', 'UPDATE', 'CREATE', 'GRANT']
+    all_query_types = ["SELECT", "INSERT", "DELETE", "COPY", "UNLOAD", "UPDATE", "CREATE", "GRANT"]
 
-    if (query_type != ""):
+    if query_type != "":
         # Use user input if query_type is not as its default value
         sql_type = query_type
-    elif type(data) == pd.DataFrame:
+    elif isinstance(data, pd.DataFrame):
         # If data is provided, use INSERT sql_type
-        sql_type = 'INSERT'
-    elif type(sql_query) == pd.DataFrame:
+        sql_type = "INSERT"
+    elif isinstance(sql_query, pd.DataFrame):
         # If data is instead of an SQL query, use INSERT sql_type
-        sql_type = 'INSERT'
+        sql_type = "INSERT"
         data = sql_query
-    elif ("UNLOAD " in sql_query.upper()):
-        sql_type = 'UNLOAD'
-    elif ("COPY " in sql_query.upper()):
-        sql_type = 'COPY'
-    elif ("UPDATE " in sql_query.upper()):
-        sql_type = 'UPDATE'
-    elif (sql_query != ""):
+    elif "UNLOAD " in sql_query.upper():
+        sql_type = "UNLOAD"
+    elif "COPY " in sql_query.upper():
+        sql_type = "COPY"
+    elif "UPDATE " in sql_query.upper():
+        sql_type = "UPDATE"
+    elif sql_query != "":
         # If a query is inserted, use select.
         # For DELETE or COPY, user needs to provide the query_type
         sql_type = "SELECT"
     else:
         allowed_queries = f"Your query_type value is not correct, allowed values are {', '.join(all_query_types)}"
         # Check if the query_type value is correct
-        raise ValueError(allowed_queries + f'. Got {query_type}')
+        raise ValueError(allowed_queries + f". Got {query_type}")
         # assert query_type.upper() in all_query_types, allowed_queries
 
     # ============================================================================================
     # Process SQL query
-    if sql_type != 'INSERT':
-        if (sql_query != "") & ('.sql' in sql_query.lower()):
+    if sql_type != "INSERT":
+        if (sql_query != "") & (".sql" in sql_query.lower()):
             # Can read an external file is path is given as sql_query
-            sql_query = read(sql_query, extension='sql', **kwargs)
-            assert sql_query != '', 'Could not read your SQL file properly. Please make sure your file is saved or check your path.'
+            sql_query = read(sql_query, extension="sql", **kwargs)
+            assert (
+                sql_query != ""
+            ), "Could not read your SQL file properly. Please make sure your file is saved or check your path."
 
     # ============================================================================================
     # Credentials load
@@ -137,31 +151,39 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
 
     # ============================================================================================
     # Start the connection
-    with SSHTunnel(config=config, connection=connection, engine=engine) as tunnel:
+    with create_ssh_tunnel(config=config, connection=connection, engine=engine) as tunnel:
         # ============================================================================================
         # Database connector
 
         # ============================================================================================
         # Set default value for table
-        if (sql_type == 'SELECT'):  # SELECT
-            if (table == ""):  # If the table is not specified, we get it from the SQL query
-                table = sql_query.upper().replace('\n', ' ').split('FROM ')[1].split(' ')[0]
-            elif (sql_type == 'SELECT') & (table.upper() in sql_query.upper()):
+        if sql_type == "SELECT":  # SELECT
+            if table == "":  # If the table is not specified, we get it from the SQL query
+                table = sql_query.upper().replace("\n", " ").split("FROM ")[1].split(" ")[0]
+            elif (sql_type == "SELECT") & (table.upper() in sql_query.upper()):
                 table = table
             else:
-                raise SyntaxError('Argument table does not match with SQL statement')
+                raise SyntaxError("Argument table does not match with SQL statement")
 
         # ========================================================================================
         # SELECT - Read query
         if sql_type.upper() == "SELECT":
             if cache:
-                sql_out = _cache(sql_query, tunnel, sql_type, cache_time=cache, verbose=verbose, cache_file_name=cache_name, cache_folder=cache_folder)
+                sql_out = _cache(
+                    sql_query,
+                    tunnel,
+                    sql_type,
+                    cache_time=cache,
+                    verbose=verbose,
+                    cache_file_name=cache_name,
+                    cache_folder=cache_folder,
+                )
             else:
                 conn = tunnel.connector()
                 sql_out = pd.read_sql(sql_query, conn, coerce_float=False)
                 # Close SQL connection
                 conn.close()
-            return(sql_out)
+            return sql_out
         # ============================================================================================
         # INSERT - Load data to the db
         elif sql_type.upper() == "INSERT":
@@ -177,11 +199,12 @@ def remote_execute_sql(sql_query="", query_type="", table="", data={}, credentia
                 cur.execute(sql_query)
                 conn.commit()
             else:
-                raise ValueError('Table does not match with SQL query')
+                raise ValueError("Table does not match with SQL query")
         else:
-            raise ValueError(f'Unknown query_type, should be as: {all_query_types}')
+            raise ValueError(f"Unknown query_type, should be as: {all_query_types}")
 
         # Close SQL connection
         conn.close()
+
 
 #######################################################################################################################
