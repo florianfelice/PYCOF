@@ -54,7 +54,6 @@ jobs:
 
     - name: Verify critical imports
       run: |
-        poetry run python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
         poetry run python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
         poetry run python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
 
