@@ -11,7 +11,14 @@ from tqdm import tqdm
 
 from .data import read, write
 from .format import file_age, verbose_display
-from .sqlhelper import SSHTunnel, _cache, _get_config, _get_credentials, _insert_data, create_ssh_tunnel
+from .sqlhelper import (
+    SSHTunnel,
+    _cache,
+    _get_config,
+    _get_credentials,
+    _insert_data,
+    create_ssh_tunnel,
+)
 
 #######################################################################################################################
 

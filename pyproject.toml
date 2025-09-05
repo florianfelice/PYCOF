@@ -60,7 +60,7 @@ google-api-python-client = "^1.12.8"
 google-auth-httplib2 = "^0.0.4"
 google-auth-oauthlib = "^0.4.2"
 google-auth = "^1.24.0"
-httplib2 = "^0.18.1"
+httplib2 = "^0.30.0"
 matplotlib = "^3.1.1"
 numpy = "^1.16.3"
 pandas = "^2.3.2"
@@ -105,8 +105,7 @@ target-version = ['py311']
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3
-line-length = 120
+
 
 [tool.mypy]
 python_version = "3.11"

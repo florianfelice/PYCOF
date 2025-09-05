@@ -1061,15 +1061,18 @@ test = ["objgraph", "psutil", "setuptools"]
 
 [[package]]
 name = "httplib2"
-version = "0.18.1"
+version = "0.30.0"
 description = "A comprehensive HTTP client library."
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 groups = ["main"]
 files = [
-    {file = "httplib2-0.18.1-py3-none-any.whl", hash = "sha256:ca2914b015b6247791c4866782fa6042f495b94401a0f0bd3e1d6e0ba2236782"},
-    {file = "httplib2-0.18.1.tar.gz", hash = "sha256:8af66c1c52c7ffe1aa5dc4bcd7c769885254b0756e6e69f953c7f0ab49a70ba3"},
+    {file = "httplib2-0.30.0-py3-none-any.whl", hash = "sha256:d10443a2bdfe0ea5dbb17e016726146d48b574208dafd41e854cf34e7d78842c"},
+    {file = "httplib2-0.30.0.tar.gz", hash = "sha256:d5b23c11fcf8e57e00ff91b7008656af0f6242c8886fd97065c97509e4e548c5"},
 ]
+
+[package.dependencies]
+pyparsing = ">=3.0.4,<4"
 
 [[package]]
 name = "identify"
@@ -3331,4 +3334,4 @@ dev = ["black", "flake8", "isort", "mypy", "poetry-dynamic-versioning", "pre-com
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "74e0a893cd21ed49c9db48b62bd89d6c9a01726e1c3faf1bf128b050ad1b7e06"
+content-hash = "40b79ed4692d19610ae6f65aa984e116c18dc8aae86e956611c87139008ff8de"

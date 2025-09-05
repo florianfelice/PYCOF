@@ -1,11 +1,3 @@
-import boto3
-import botocore
-
-import sshtunnel
-
-import paramiko
-from fabric import Connection
-
 import csv
 import datetime
 import getpass
@@ -17,14 +9,26 @@ import sys
 import warnings
 from types import SimpleNamespace
 
+import boto3
+import botocore
 import numpy as np
 import pandas as pd
+import paramiko
 import psycopg2
 import sqlalchemy as sa
+import sshtunnel
+from fabric import Connection
 from tqdm import tqdm
 
 from .data import read
-from .misc import _fake_tunnel, _get_config, _pycof_folders, file_age, verbose_display, write
+from .misc import (
+    _fake_tunnel,
+    _get_config,
+    _pycof_folders,
+    file_age,
+    verbose_display,
+    write,
+)
 
 # #######################################################################################################################
 # Cache data from SQL
