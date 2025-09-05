@@ -2,6 +2,7 @@ import boto3
 import botocore
 
 import sshtunnel
+
 import paramiko
 from fabric import Connection
 
@@ -225,18 +226,15 @@ class SSHTunnel:
         else:
             ssh_path = self.config.get("SSH_KEY")
 
-        if SSHTUNNEL_AVAILABLE:
-            self.tunnel = sshtunnel.SSHTunnelForwarder(
-                (self.config.get("DB_HOST"), ssh_port),
-                ssh_username=self.config.get("SSH_USER"),
-                ssh_password=self.config.get("SSH_PASSWORD"),
-                ssh_pkey=ssh_path,
-                remote_bind_address=(remote_addr, remote_port),
-            )
-            self.tunnel.daemon_forward_servers = True
-            self.tunnel.connector = self._define_connector
-        else:
-            raise ImportError("sshtunnel library is required for SSH connections")
+        self.tunnel = sshtunnel.SSHTunnelForwarder(
+            (self.config.get("DB_HOST"), ssh_port),
+            ssh_username=self.config.get("SSH_USER"),
+            ssh_password=self.config.get("SSH_PASSWORD"),
+            ssh_pkey=ssh_path,
+            remote_bind_address=(remote_addr, remote_port),
+        )
+        self.tunnel.daemon_forward_servers = True
+        self.tunnel.connector = self._define_connector
 
     def _start_tunnel(self):
         """Start the port forwarding (called by connector)"""
