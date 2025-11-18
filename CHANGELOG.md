@@ -2,7 +2,18 @@
 
 
 
+## v1.7.0 (2025-11-18)
+
+### Feature
+
+* feat: rename logger ([`ad1b42e`](https://github.com/florianfelice/PYCOF/commit/ad1b42e40175492c81ad5d0f0f5c302852f9eae5))
+
+
 ## v1.6.0 (2025-09-05)
+
+### Chore
+
+* chore(release): v1.6.0 ([`b4201d7`](https://github.com/florianfelice/PYCOF/commit/b4201d7e13f80f86013209094f391b87a3ec9fd4))
 
 ### Feature
 
