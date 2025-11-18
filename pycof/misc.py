@@ -429,9 +429,44 @@ def setup_logging(file=__name__, logging_level=logging.INFO):
     """
     Set up logging configuration.
     """
+    # For external libraries using this function, use a consistent logger name
+    # to avoid hierarchy issues when multiple modules call this function
+    if not file.startswith("pycof"):
+        # Extract the top-level package name for external libraries
+        package_name = file.split(".")[0]
+        logger_name = package_name
+    else:
+        logger_name = file
+
     # Create a logger
-    logger = logging.getLogger(file)
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging_level)
+
+    # Check if logger already has handlers to avoid duplicates
+    if logger.handlers:
+        # Make sure propagation is disabled even for existing loggers
+        logger.propagate = False
+
+        # CRITICAL: Ensure root logger is completely disabled on every call
+        root_logger = logging.getLogger()
+        root_logger.disabled = True
+
+        return logger
+
+    # CRITICAL FIX: Completely disable the root logger
+    root_logger = logging.getLogger()
+    root_logger.disabled = True
+
+    # Clear any existing handlers from this logger and disable propagation
+    logger.handlers.clear()
+    logger.propagate = False
+
+    # Also clear handlers from any parent loggers in the same package to prevent interference
+    parent_name = ".".join(logger_name.split(".")[:-1]) if "." in logger_name else None
+    if parent_name:
+        parent_logger = logging.getLogger(parent_name)
+        parent_logger.handlers.clear()
+        parent_logger.propagate = False
 
     # Create handlers
     console_handler = logging.StreamHandler()
