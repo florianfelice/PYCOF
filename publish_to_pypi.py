@@ -9,7 +9,8 @@ from pathlib import Path
 # Import PYCOF's config system
 try:
     import pycof as pc
-except ImportError:
+except ImportError as e:
+    print(f"ImportError: {e}")
     print("Error: Could not import pycof. Make sure it's installed or run from the project directory.")
     sys.exit(1)
 

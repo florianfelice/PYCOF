@@ -107,3 +107,40 @@ jobs:
         git pull origin main --rebase
         poetry run semantic-release version
         poetry run semantic-release publish
+
+  publish-pypi:
+    needs: release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      id-token: write  # Required for trusted publishing
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install poetry-dynamic-versioning
+      run: poetry self add "poetry-dynamic-versioning[plugin]"
+
+    - name: Build package
+      run: poetry build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # Uses OpenID Connect (OIDC) trusted publishing - no API token needed
+      # Must be configured at: https://pypi.org/manage/project/PYCOF/settings/publishing/
