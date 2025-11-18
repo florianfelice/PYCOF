@@ -2,7 +2,18 @@
 
 
 
+## v1.7.1 (2025-11-18)
+
+### Fix
+
+* fix: update workflow release ([`38d3bd7`](https://github.com/florianfelice/PYCOF/commit/38d3bd743449de698acec651ec9b13fea2099bdc))
+
+
 ## v1.7.0 (2025-11-18)
+
+### Chore
+
+* chore(release): v1.7.0 ([`b1fa980`](https://github.com/florianfelice/PYCOF/commit/b1fa980fde343a08cb54ef5fef00e7df263590a2))
 
 ### Feature
 

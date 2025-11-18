@@ -47,7 +47,7 @@ Repository = "https://github.com/florianfelice/PYCOF"
 [tool.poetry]
 readme = "README.md"
 packages = [{include = "pycof"}]
-version = "1.7.0"
+version = "1.7.1"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
