@@ -38,7 +38,7 @@ dev = [
     "mypy>=1.8.0",
     "pre-commit>=3.0.0",
     "poetry-dynamic-versioning>=1.0.0",
-    "python-semantic-release>=8.0.0",
+    "python-semantic-release>=10.6.1",
 ]
 
 [project.urls]
@@ -58,7 +58,7 @@ flake8 = "^7.3.0"
 mypy = "^1.8.0"
 pre-commit = "^3.0.0"
 poetry-dynamic-versioning = "^1.0.0"
-python-semantic-release = "^8.0.0"
+python-semantic-release = "^10.6.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
