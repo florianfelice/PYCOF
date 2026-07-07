@@ -13,8 +13,10 @@ import time
 import traceback
 import warnings
 from email.message import EmailMessage
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
 
 import dateparser
 import numpy as np
@@ -40,7 +42,7 @@ default_scopes = ["https://mail.google.com/", "https://www.googleapis.com/auth/c
 
 
 # Send an Email
-def send_email(to, subject, body, cc="", credentials={}, connection="auto"):
+def send_email(to, subject, body, cc="", credentials={}, connection="auto", images=None):
     """Simplified function to send emails.
     Will look at the credentials at :obj:`/etc/.pycof/config.json`. User can also pass a dictionnary for credentials.
 
@@ -50,6 +52,12 @@ def send_email(to, subject, body, cc="", credentials={}, connection="auto"):
         * **body** (:obj:`str`): Content of the email to be send.
         * **cc** (:obj:`str`): Email address to be copied (defaults None).
         * **credentials** (:obj:`dict`): Credentials to use to connect to the database. You can also provide the credentials path or the json file name from :obj:`/etc/.pycof/` (defaults {}).
+        * **images** (:obj:`dict` or :obj:`list`): Inline images to embed in an HTML body. Pass a
+          :obj:`dict` mapping a Content-ID to an image file path (``{"photo1": "/path/to/a.jpg"}``) and
+          reference it in the HTML with ``<img src="cid:photo1">``. A :obj:`list` of paths is also
+          accepted, in which case each image's Content-ID is its filename without extension. When
+          provided, the message is built as ``multipart/related`` so email clients render the images
+          inline without any external hosting (defaults None).
 
     :Configuration: The function requires the below arguments in the configuration file.
 
@@ -79,14 +87,31 @@ def send_email(to, subject, body, cc="", credentials={}, connection="auto"):
     if connection.lower() == "auto":
         pattern = re.compile("^([0-9]+.[0-9]+.[0-9]+.[0-9]+)+$")
         connection = "direct" if pattern.match(config.get("EMAIL_SMTP")) else "ssh"
-    msg = MIMEMultipart()
-    msg["From"] = config.get("EMAIL_USER")
+
+    mail_type = "html" if "</" in body else "plain"
+
+    # 'related' when embedding inline images so the HTML body and its images travel together.
+    msg = MIMEMultipart("related") if images else MIMEMultipart()
+    # Show the configured display name (EMAIL_SENDER) in the From header, e.g.
+    # "Acme Corp <noreply@example.com>"; fall back to the bare address if unset.
+    msg["From"] = formataddr((config.get("EMAIL_SENDER") or "", config.get("EMAIL_USER")))
     msg["To"] = to
     # msg['Cc'] = '' if cc == '' else cc
     msg["Subject"] = subject
 
-    mail_type = "html" if "</" in body else "plain"
     msg.attach(MIMEText(body, mail_type))
+
+    if images:
+        # Accept either {cid: path} or a list of paths keyed by filename stem.
+        img_map = images if isinstance(images, dict) else {
+            os.path.splitext(os.path.basename(p))[0]: p for p in images
+        }
+        for cid, path in img_map.items():
+            with open(path, "rb") as img_file:
+                img = MIMEImage(img_file.read())
+            img.add_header("Content-ID", f"<{cid}>")
+            img.add_header("Content-Disposition", "inline", filename=os.path.basename(path))
+            msg.attach(img)
 
     text = msg.as_string()
 
@@ -437,7 +462,7 @@ def display_name(display="first"):
 
     :Example:
         >>> pycof.display_name()
-        ... 'Florian'
+        ... 'Jane'
 
     :Returns:
         * :obj:`str`: Name to be displayed.
