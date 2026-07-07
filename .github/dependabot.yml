@@ -1,0 +1,42 @@
+# Dependabot configuration
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  # ---------------------------------------------------------------------------
+  # Python dependencies (Poetry — pyproject.toml + poetry.lock)
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # Conventional-commit prefixes so python-semantic-release handles these cleanly.
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(dev-deps)"
+    groups:
+      # Bundle all non-major bumps into a single PR to avoid a flood of PRs.
+      # Major upgrades still come as their own PR so they get individual review.
+      python-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Example: to avoid surprise major jumps (e.g. pandas 2 -> 3), uncomment:
+    # ignore:
+    #   - dependency-name: "pandas"
+    #     update-types: ["version-update:semver-major"]
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions used in .github/workflows/
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
