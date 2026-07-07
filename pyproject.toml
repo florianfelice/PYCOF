@@ -45,10 +45,11 @@ dev = [
 Homepage = "https://github.com/florianfelice/PYCOF"
 Repository = "https://github.com/florianfelice/PYCOF"
 
+
 [tool.poetry]
 readme = "README.md"
 packages = [{include = "pycof"}]
-version = "1.7.1"
+version = "1.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.3"
@@ -60,9 +61,6 @@ pre-commit = "^3.0.0"
 poetry-dynamic-versioning = "^1.0.0"
 python-semantic-release = "^8.0.0"
 
-[build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry-dynamic-versioning]
 enable = true
@@ -75,6 +73,7 @@ files = ["pycof/about.py"]
 patterns = [
     "(^_version\\\\s*=\\\\s*)['\"]([^'\"]*)['\"]",
 ]
+
 
 [tool.black]
 line-length = 120
@@ -116,8 +115,14 @@ comment_end_string = "#}"
 trim_blocks = false
 lstrip_blocks = false
 
+
 [tool.flake8]
 max-line-length = 120
 ignore = ["E203", "E266", "E501", "W503", "F403", "F401", "E402", "E101", "W191"]
 max-complexity = 18
 select = ["B", "C", "E", "F", "W", "T4", "B9"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+

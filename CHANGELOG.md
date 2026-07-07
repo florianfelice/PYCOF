@@ -2,7 +2,65 @@
 
 
 
+## v1.8.0 (2026-07-07)
+
+### Chore
+
+* chore(deps): upgrade dependencies to resolve security vulnerabilities
+
+Regenerate the lockfile to clear all 50 known vulnerabilities reported by
+pip-audit (0 remaining in the resolved environment), superseding the 9 open
+Dependabot security PRs.
+
+Notable runtime bumps: paramiko 4.0.0 -&gt; 5.0.0 (resolves CVE-2026-44405,
+which had no fix at 4.x), plus cryptography, urllib3, pillow, protobuf,
+pyarrow, requests, idna, pyasn1, fonttools, pynacl and filelock.
+
+pyproject.toml:
+- Add fabric to [project].dependencies. It is imported by sqlhelper.py
+  (used by remote_execute_sql) but was only declared in the legacy
+  [tool.poetry.dependencies] table, which Poetry 2.x ignores in favour of
+  [project] -- a fresh lock would otherwise drop it entirely.
+- Remove the redundant, drifted [tool.poetry.dependencies] table so
+  [project].dependencies is the single source of truth.
+- Bump pyarrow floor to &gt;=23.0.1 and dev tools black&gt;=26.3.1, pytest&gt;=9.0.3.
+
+format.py and misc.py are black 26 reformatting only (no behaviour change).
+
+Verified: remote_execute_sql, read and send_email behave identically
+(functional round-trip tests), plus pytest, black, isort and flake8 pass.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) &lt;noreply@anthropic.com&gt; ([`0d7068f`](https://github.com/florianfelice/PYCOF/commit/0d7068ff7f350fbc58c6b4fe26f34d2969786791))
+
+### Ci
+
+* ci: add Dependabot configuration for pip and github-actions
+
+Enable weekly version updates for the Poetry dependencies and the GitHub
+Actions used in the release workflow. Non-major bumps are grouped into a
+single PR to reduce noise; conventional-commit prefixes keep the commits
+compatible with python-semantic-release.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) &lt;noreply@anthropic.com&gt; ([`75533c5`](https://github.com/florianfelice/PYCOF/commit/75533c5ac06ca336b6f3fd6a257a20b92107db9a))
+
+### Feature
+
+* feat: inline CID images in send_email + honor EMAIL_SENDER display name
+
+- send_email now accepts images={cid: path} (or a list of paths) to embed
+  inline images via multipart/related, referenced in HTML as
+  &lt;img src=&#34;cid:key&#34;&gt;, so clients render them without external hosting.
+- The From header now uses EMAIL_SENDER as the display name (previously
+  documented but never applied), falling back to the bare EMAIL_USER.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) &lt;noreply@anthropic.com&gt; ([`cc28706`](https://github.com/florianfelice/PYCOF/commit/cc287067be613243ac160cd0a33b81c6c434e186))
+
+
 ## v1.7.1 (2025-11-18)
+
+### Chore
+
+* chore(release): v1.7.1 ([`f20ade0`](https://github.com/florianfelice/PYCOF/commit/f20ade04992f5436c2e57c3932c1da911004838c))
 
 ### Fix
 
