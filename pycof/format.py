@@ -103,9 +103,7 @@ def send_email(to, subject, body, cc="", credentials={}, connection="auto", imag
 
     if images:
         # Accept either {cid: path} or a list of paths keyed by filename stem.
-        img_map = images if isinstance(images, dict) else {
-            os.path.splitext(os.path.basename(p))[0]: p for p in images
-        }
+        img_map = images if isinstance(images, dict) else {os.path.splitext(os.path.basename(p))[0]: p for p in images}
         for cid, path in img_map.items():
             with open(path, "rb") as img_file:
                 img = MIMEImage(img_file.read())

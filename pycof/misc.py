@@ -42,10 +42,8 @@ def _pycof_folders(output=None, verbose=False):
             os.makedirs(creds_fold)
             _created += 1
         except PermissionError as err:
-            raise PermissionError(
-                f"""Could not create the PYCOF config folder, permission denied: {creds_fold}.
-                    Please create folder with: sudo mkdir {creds_fold} or run your script with super-user: {err}"""
-            )
+            raise PermissionError(f"""Could not create the PYCOF config folder, permission denied: {creds_fold}.
+                    Please create folder with: sudo mkdir {creds_fold} or run your script with super-user: {err}""")
 
     # Queries temp folder
     folds_q = os.path.join(temp_path, "pycof", "cache", "queries") + os.sep
@@ -54,10 +52,8 @@ def _pycof_folders(output=None, verbose=False):
             os.makedirs(folds_q)
             _created += 1
         except PermissionError as err:
-            raise PermissionError(
-                f"""Could not create the PYCOF temp folder, permission denied: {folds_q}.
-                    Please create folder with: sudo mkdir {folds_q} or run your script with super-user: {err}"""
-            )
+            raise PermissionError(f"""Could not create the PYCOF temp folder, permission denied: {folds_q}.
+                    Please create folder with: sudo mkdir {folds_q} or run your script with super-user: {err}""")
 
     # Data temp folder
     folds_d = os.path.join(temp_path, "pycof", "cache", "data") + os.sep
@@ -66,10 +62,8 @@ def _pycof_folders(output=None, verbose=False):
             os.makedirs(folds_d)
             _created += 1
         except PermissionError as err:
-            raise PermissionError(
-                f"""Could not create the PYCOF temp data folder, permission denied: {folds_d}.
-                    Please create folder with: sudo mkdir {folds_d} or run your script with super-user: {err}"""
-            )
+            raise PermissionError(f"""Could not create the PYCOF temp data folder, permission denied: {folds_d}.
+                    Please create folder with: sudo mkdir {folds_d} or run your script with super-user: {err}""")
 
     # S3 temp folder
     folds_s3 = os.path.join(temp_path, "pycof", "cache", "s3") + os.sep
@@ -78,10 +72,8 @@ def _pycof_folders(output=None, verbose=False):
             os.makedirs(folds_s3)
             _created += 1
         except PermissionError as err:
-            raise PermissionError(
-                f"""Could not create the PYCOF temp s3 folder, permission denied: {folds_s3}.
-                    Please create folder with: sudo mkdir {folds_s3} or run your script with super-user: {err}"""
-            )
+            raise PermissionError(f"""Could not create the PYCOF temp s3 folder, permission denied: {folds_s3}.
+                    Please create folder with: sudo mkdir {folds_s3} or run your script with super-user: {err}""")
 
     # Models temp folder
     folds_models = os.path.join(temp_path, "pycof", "cache", "models") + os.sep
@@ -90,10 +82,8 @@ def _pycof_folders(output=None, verbose=False):
             os.makedirs(folds_models)
             _created += 1
         except PermissionError as err:
-            raise PermissionError(
-                f"""Could not create the PYCOF temp models folder, permission denied: {folds_models}.
-                    Please create folder with: sudo mkdir {folds_models} or run your script with super-user: {err}"""
-            )
+            raise PermissionError(f"""Could not create the PYCOF temp models folder, permission denied: {folds_models}.
+                    Please create folder with: sudo mkdir {folds_models} or run your script with super-user: {err}""")
 
     # Return path if asked by user
     if output in ["tmp", "temp"]:
