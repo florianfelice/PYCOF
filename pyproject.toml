@@ -4,7 +4,7 @@ dynamic = ["version", "description", "readme", "license", "authors"]
 description = "PYthon COmmon Functions"
 requires-python = ">=3.11,<3.13"
 dependencies = [
-    "boto3>=1.16.19",
+    "boto3>=1.43.45",
     "bs4>=0.0.1",
     "colorlog>=6.9.0",
     "dateparser>=1.0.0",
@@ -12,7 +12,7 @@ dependencies = [
     "google-api-python-client>=1.12.8",
     "google-auth-httplib2>=0.0.4",
     "google-auth-oauthlib>=0.4.2",
-    "google-auth>=1.24.0",
+    "google-auth>=2.55.2",
     "httplib2>=0.18.1",
     "matplotlib>=3.1.1",
     "numpy>=1.16.3",
